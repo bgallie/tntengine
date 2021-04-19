@@ -10,9 +10,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/bgallie/tntEngine/rand"
-
 	"github.com/bgallie/jc1"
+	"github.com/bgallie/tntEngine/rand"
 )
 
 var (
@@ -41,6 +40,10 @@ func (e *TntEngine) Left() chan CypherBlock {
 
 func (e *TntEngine) Right() chan CypherBlock {
 	return e.right
+}
+
+func (e *TntEngine) Key() *jc1.UberJc1 {
+	return e.jc1Key
 }
 
 func (e *TntEngine) CounterKey() string {
