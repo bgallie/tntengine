@@ -58,6 +58,10 @@ func (rnd *Rand) Intn(max int) int {
 	}
 }
 
+func (rnd *Rand) Int64n(n int64) int64 {
+	return int64(rnd.Intn(int(n)))
+}
+
 func (rnd *Rand) Perm(n int) []int {
 	res := make([]int, n, n)
 
