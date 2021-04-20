@@ -1,19 +1,17 @@
 // Package tntEngine - define TntEngine type and it's methods
-package rand
+package tntEngine
 
 import (
 	"math/bits"
-
-	"github.com/bgallie/tntEngine"
 )
 
-var blk tntEngine.CypherBlock
+var blk CypherBlock
 
 type Rand struct {
-	tntMachine *tntEngine.TntEngine
+	tntMachine *TntEngine
 }
 
-func New(src *tntEngine.TntEngine) *Rand {
+func NewRand(src *TntEngine) *Rand {
 	var rand Rand
 	rand.tntMachine = src
 	blk.Length = 0
@@ -87,9 +85,9 @@ func (rnd *Rand) fillBytes(p []byte) (n int, err error) {
 
 	// If the number of bytes to read is less then CypherBlockBytes, we will
 	// attempt to fill the request from the previously retreived CypherBlock
-	if cap(p) < tntEngine.CypherBlockBytes/2 {
+	if cap(p) < CypherBlockBytes/2 {
 		if blk.Length == 0 {
-			blk.Length = tntEngine.CypherBlockBytes
+			blk.Length = CypherBlockBytes
 			blkSlice := blk.CypherBlock[:]
 			copy(blkSlice, rnd.tntMachine.Key().XORKeyStream(blkSlice))
 			left <- blk
@@ -100,7 +98,7 @@ func (rnd *Rand) fillBytes(p []byte) (n int, err error) {
 			// If there are not enough bytes in 'blk' to get 'k' bytes, get
 			// the next 32 psudo-random bytes into 'blk'
 			if blk.Length+int8(len(p)) > 31 {
-				blk.Length = tntEngine.CypherBlockBytes
+				blk.Length = CypherBlockBytes
 				left <- blk
 				blk = <-right
 				blk.Length = 0
@@ -112,7 +110,7 @@ func (rnd *Rand) fillBytes(p []byte) (n int, err error) {
 		}
 	} else {
 		for {
-			blk.Length = tntEngine.CypherBlockBytes
+			blk.Length = CypherBlockBytes
 			left <- blk
 			blk = <-right
 			remaining := cap(p) - len(p)

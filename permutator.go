@@ -131,7 +131,7 @@ func (p *Permutator) Index() *big.Int {
 	return nil
 }
 
-// ApplyF performs the forward permutation on the 32 byte block of data.
+// ApplyF performs forward permutation on the 32 byte block of data.
 func (p *Permutator) ApplyF(blk *[CypherBlockBytes]byte) *[CypherBlockBytes]byte {
 	var res [CypherBlockBytes]byte
 	blks := blk[:]
