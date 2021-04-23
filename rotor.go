@@ -70,7 +70,7 @@ func (r *Rotor) Index() *big.Int {
 	return nil
 }
 
-// ApplyF - encrypts the given block of data
+// ApplyF - encrypts the given block of data.
 func (r *Rotor) ApplyF(blk *[CypherBlockBytes]byte) *[CypherBlockBytes]byte {
 	var res [CypherBlockBytes]byte
 	ress := res[:]

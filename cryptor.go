@@ -304,6 +304,9 @@ func AddBlock(blk, key *[CypherBlockBytes]byte) *[CypherBlockBytes]byte {
 // EncryptMachine - set up a rotor, permutator, or counter to encrypt a block
 // read from the left (input channel) and send it out on the right (output channel)
 func EncryptMachine(ecm Crypter, left chan CypherBlock) chan CypherBlock {
+	if ecm == nil {
+		panic("ecm is nil")
+	}
 	right := make(chan CypherBlock)
 	go func(ecm Crypter, left chan CypherBlock, right chan CypherBlock) {
 		defer close(right)
@@ -313,8 +316,7 @@ func EncryptMachine(ecm Crypter, left chan CypherBlock) chan CypherBlock {
 				right <- inp
 				break
 			}
-
-			ecm.ApplyF(&inp.CypherBlock)
+			inp.CypherBlock = *ecm.ApplyF(&inp.CypherBlock)
 			right <- inp
 		}
 	}(ecm, left, right)
@@ -335,7 +337,7 @@ func DecryptMachine(ecm Crypter, left chan CypherBlock) chan CypherBlock {
 				break
 			}
 
-			ecm.ApplyG(&inp.CypherBlock)
+			inp.CypherBlock = *ecm.ApplyG(&inp.CypherBlock)
 			right <- inp
 		}
 	}(ecm, left, right)
@@ -353,7 +355,6 @@ func CreateEncryptMachine(ecms ...Crypter) (left chan CypherBlock, right chan Cy
 		for idx++; idx < len(ecms); idx++ {
 			right = EncryptMachine(ecms[idx], right)
 		}
-
 	} else {
 		panic("you must give at least one encryption device!")
 	}
