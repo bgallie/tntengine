@@ -136,9 +136,6 @@ func (e *TntEngine) Init(secret []byte, proFormaFileName string) {
 	counter.SetIndex(BigZero)
 	newMachine[len(newMachine)-1] = counter
 	e.engine = newMachine
-	// e.SetEngineType("E")
-	// e.left, e.right = CreateEncryptMachine(e.engine...)
-	// random = NewRand(e)
 }
 
 func (e *TntEngine) BuildCipherMachine() {
