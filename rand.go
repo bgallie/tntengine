@@ -85,8 +85,9 @@ func (rnd *Rand) fillBytes(p []byte) (n int, err error) {
 	p = p[:0]
 	left := rnd.tntMachine.Left()
 	right := rnd.tntMachine.Right()
+	blk.Length = CypherBlockBytes
+	_ = copy(blk.CypherBlock[:], rnd.tntMachine.jc1Key.XORKeyStream(blk.CypherBlock[:]))
 	for {
-		blk.Length = CypherBlockBytes
 		left <- blk
 		blk = <-right
 		remaining := cap(p) - len(p)
