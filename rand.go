@@ -5,15 +5,18 @@ import (
 	"math/bits"
 )
 
-var blk CypherBlock
+// var blk CypherBlock
 
 type Rand struct {
 	tntMachine *TntEngine
+	idx        int
+	blk        CypherBlock
 }
 
 func NewRand(src *TntEngine) *Rand {
 	var rand Rand
 	rand.tntMachine = src
+	rand.idx = CypherBlockBytes
 	return &rand
 }
 
@@ -40,7 +43,7 @@ func (rnd *Rand) Intn(max int) int {
 	bytes := make([]byte, k)
 
 	for {
-		_, _ = rnd.fillBytes(bytes)
+		_, _ = rnd.Read(bytes)
 		// Clear bits in the first byte to increase the probability
 		// that the candidate is < max.
 		bytes[0] &= uint8(int(1<<b) - 1)
@@ -77,24 +80,28 @@ func (rnd *Rand) Perm(n int) []int {
 }
 
 func (rnd *Rand) Read(p []byte) (n int, err error) {
-	return rnd.fillBytes(p)
-}
-
-func (rnd *Rand) fillBytes(p []byte) (n int, err error) {
 	err = nil
 	p = p[:0]
 	left := rnd.tntMachine.Left()
 	right := rnd.tntMachine.Right()
-	blk.Length = CypherBlockBytes
-	_ = copy(blk.CypherBlock[:], rnd.tntMachine.jc1Key.XORKeyStream(blk.CypherBlock[:]))
 	for {
-		left <- blk
-		blk = <-right
+		if rnd.idx >= CypherBlockBytes {
+			if rnd.blk.Length == 0 {
+				rnd.blk.Length = CypherBlockBytes
+				_ = copy(rnd.blk.CypherBlock[:], rnd.tntMachine.jc1Key.XORKeyStream(rnd.blk.CypherBlock[:]))
+			}
+			left <- rnd.blk
+			rnd.blk = <-right
+			rnd.idx = 0
+		}
+		leftInBlk := len(rnd.blk.CypherBlock) - rnd.idx
 		remaining := cap(p) - len(p)
-		if remaining >= int(blk.Length) {
-			p = append(p, blk.CypherBlock[0:]...)
+		if remaining >= leftInBlk {
+			p = append(p, rnd.blk.CypherBlock[rnd.idx:]...)
+			rnd.idx += leftInBlk
 		} else {
-			p = append(p, blk.CypherBlock[0:remaining]...)
+			p = append(p, rnd.blk.CypherBlock[0:remaining]...)
+			rnd.idx += remaining
 			break
 		}
 	}
