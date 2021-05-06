@@ -1,5 +1,5 @@
 // Package cryptors - bit manipulation routines tests
-package tntEngine
+package tntengine
 
 import (
 	"reflect"

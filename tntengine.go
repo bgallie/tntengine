@@ -1,5 +1,8 @@
-// Package tntEngine - define TntEngine type and it's methods
-package tntEngine
+// This is free and unencumbered software released into the public domain.
+// See the UNLICENSE file for details.
+
+// Package tntengine - define TntEngine type and it's methods
+package tntengine
 
 import (
 	"encoding/hex"
@@ -11,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/bgallie/jc1"
+	"golang.org/x/crypto/sha3"
 )
 
 var (
@@ -24,30 +28,34 @@ var (
 	random          *Rand
 )
 
+// TntEngine type defines the encryption/decryption machine (rotors and
+// permutators).
 type TntEngine struct {
-	engineType  string // "Encrypt" or "Decrypt"
+	engineType  string // "E)ncrypt" or "D)ecrypt"
 	engine      []Crypter
 	left, right chan CypherBlock
 	jc1Key      *jc1.UberJc1
 	cntrKey     string
 }
 
+// Left is a getter that returns the input channel for the TntEngine.
 func (e *TntEngine) Left() chan CypherBlock {
 	return e.left
 }
 
+// Right is a getter that returns the output channel for the TntEngine.
 func (e *TntEngine) Right() chan CypherBlock {
 	return e.right
 }
 
-func (e *TntEngine) Key() *jc1.UberJc1 {
-	return e.jc1Key
-}
-
+// CounterKey is a getter that returns the SHAKE256 hash for the secret key.
+// This is used to set/retrieve that next block to use in encrypting data.
 func (e *TntEngine) CounterKey() string {
 	return e.cntrKey
 }
 
+// Index is a getter that returns the block number of the next block to be
+// encrypted.
 func (e *TntEngine) Index() (cntr *big.Int) {
 	if len(e.engine) != 0 {
 		machine := e.engine[len(e.engine)-1]
@@ -62,12 +70,16 @@ func (e *TntEngine) Index() (cntr *big.Int) {
 	return
 }
 
+// SetIndex is a setter function that sets the rotors and permutators so the
+// the TntEngine will be ready start encrypting/decrypting at the correct block.
 func (e *TntEngine) SetIndex(iCnt *big.Int) {
 	for _, machine := range e.engine {
 		machine.SetIndex(iCnt)
 	}
 }
 
+// SetEngineType is a setter function that sets the engineType [D)ecrypt or E)crypt]
+// of the TntEngine.
 func (e *TntEngine) SetEngineType(engineType string) {
 	switch string(strings.TrimSpace(engineType)[0]) {
 	case "d", "D":
@@ -79,32 +91,37 @@ func (e *TntEngine) SetEngineType(engineType string) {
 	}
 }
 
+// Engine is a getter function that returns a slice containing the rotors and
+// permutators for the TntEngine.
 func (e *TntEngine) Engine() []Crypter {
 	return e.engine
 }
 
+// EngineType is a getter function that returns the engine type of the TntMachine.
 func (e *TntEngine) EngineType() string {
 	return e.engineType
 }
 
+// Init will initialize the TntEngine generating new Rotors and Permutators using
+// the proForma rotors and permutators in complex way, updating the rotors and
+// permutators in place.
 func (e *TntEngine) Init(secret []byte, proFormaFileName string) {
 	e.jc1Key = jc1.NewUberJc1(secret)
 	// Create an ecryption machine based on the proForma rotors and permutators.
 	e.engine = *createProFormaMachine(proFormaFileName)
-	e.left, e.right = CreateEncryptMachine(e.engine...)
+	e.left, e.right = createEncryptMachine(e.engine...)
 	// Create a random number function [func(max int) int] that uses psudo-
 	// random data generated the proforma encryption machine.
 	random := NewRand(e)
-	// Get a 'checksum' of the encryption key.  This is used as a key to store
+	// Get a SHA-3 hash of the encryption key.  This is used as a key to store
 	// the count of blocks already encrypted to use as a starting point for the
-	// next encryption.
-	var blk CypherBlock
-	var cksum [CypherBlockBytes]byte
-	blk.Length = CypherBlockBytes
-	_ = copy(blk.CypherBlock[:], e.jc1Key.XORKeyStream(cksum[:]))
-	e.left <- blk
-	blk = <-e.right
-	e.cntrKey = hex.EncodeToString(blk.CypherBlock[:])
+	// encryption of the next message.
+	k := make([]byte, 1024)
+	h := make([]byte, 32)
+	d := sha3.NewShake256()
+	d.Write(e.jc1Key.XORKeyStream(k))
+	d.Read(h)
+	e.cntrKey = hex.EncodeToString(h)
 	// Create a permutaion of the rotor indices to allow picking the rotors in
 	// a random order based on the key.
 	rotorSizes = random.Perm(len(RotorSizes))
@@ -138,24 +155,25 @@ func (e *TntEngine) Init(secret []byte, proFormaFileName string) {
 	e.engine = newMachine
 }
 
+// BuildCiperMachine will create a "machine" to encrypt or decrypt data sent to the
+// left channel and outputed on the right channel for the TntEngine.  The engineType
+// determines weither a encrypt machine or a decrypt machine will be created.
 func (e *TntEngine) BuildCipherMachine() {
 	switch e.engineType {
 	case "D":
-		e.left, e.right = CreateDecryptMachine(e.engine...)
+		e.left, e.right = createDecryptMachine(e.engine...)
 	case "E":
-		e.left, e.right = CreateEncryptMachine(e.engine...)
+		e.left, e.right = createEncryptMachine(e.engine...)
 	default:
 		log.Fatalf("Missing or incorrect TntEngine engineType: [%s]", e.engineType)
 
 	}
 }
 
-/*
-	createProFormaMachine initializes the pro-forma machine used to create the
-	TNT2 encryption machine.  If the machineFileName is not empty then the
-	pro-forma machine is loaded from that file, else the hardcoded rotors and
-	permutators are used to initialize the pro-formaa machine.
-*/
+// createProFormaMachine initializes the proForma machine used to create the
+// TNT2 encryption machine.  If the machineFileName is not empty then the
+// proForma machine is loaded from that file, else the hardcoded rotors and
+// permutators are used to initialize the proForma machine.
 func createProFormaMachine(machineFileName string) *[]Crypter {
 	var newMachine []Crypter
 	if len(machineFileName) == 0 {
@@ -199,11 +217,9 @@ func createProFormaMachine(machineFileName string) *[]Crypter {
 	return &newMachine
 }
 
-/*
-	updateRotor will update the given (proforma) rotor in place using (psudo-
-	random) data generated by the TNT2 encrytption algorithm using the pro-forma
-	rotors and permutators.
-*/
+// updateRotor will update the given (proforma) rotor in place using (psudo-
+// random) data generated by the TNT2 encrytption algorithm using the proForma
+// rotors and permutators.
 func updateRotor(r *Rotor, random *Rand) {
 	// Get size, start and step of the new rotor
 	rotorSize := RotorSizes[rotorSizes[rotorSizesIndex]]
@@ -228,11 +244,9 @@ func updateRotor(r *Rotor, random *Rand) {
 	r.Update(rotorSize, start, step)
 }
 
-/*
-	updatePermutator will update the given (proforma) permutator in place using
-	(psudo-random) data generated by the TNT2 encrytption algorithm using the
-	proforma rotors and permutators.
-*/
+// updatePermutator will update the given (proForma) permutator in place using
+// (psudo-random) data generated by the TNT2 encrytption algorithm using the
+// proForma rotors and permutators.
 func updatePermutator(p *Permutator, random *Rand) {
 	var randp [CypherBlockSize]byte
 	// Create a table of byte values [0...255] in a random order

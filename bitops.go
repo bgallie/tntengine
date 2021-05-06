@@ -1,5 +1,7 @@
-// Package cryptors - bit manipulation routines
-package tntEngine
+// This is free and unencumbered software released into the public domain.
+// See the UNLICENSE file for details.
+
+package tntengine
 
 // SetBit - set bit in a byte array
 func SetBit(ary []byte, bit uint) []byte {

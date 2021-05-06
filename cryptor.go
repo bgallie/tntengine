@@ -1,5 +1,7 @@
-// Package cryptors - define constants and interfaces used by the TNT2 encrypton engine.
-package tntEngine
+// This is free and unencumbered software released into the public domain.
+// See the UNLICENSE file for details.
+
+package tntengine
 
 import (
 	"bytes"
@@ -346,7 +348,7 @@ func DecryptMachine(ecm Crypter, left chan CypherBlock) chan CypherBlock {
 }
 
 // CreateEncryptMachine -
-func CreateEncryptMachine(ecms ...Crypter) (left chan CypherBlock, right chan CypherBlock) {
+func createEncryptMachine(ecms ...Crypter) (left chan CypherBlock, right chan CypherBlock) {
 	if ecms != nil {
 		idx := 0
 		left = make(chan CypherBlock)
@@ -363,7 +365,7 @@ func CreateEncryptMachine(ecms ...Crypter) (left chan CypherBlock, right chan Cy
 }
 
 // CreateDecryptMachine -
-func CreateDecryptMachine(ecms ...Crypter) (left chan CypherBlock, right chan CypherBlock) {
+func createDecryptMachine(ecms ...Crypter) (left chan CypherBlock, right chan CypherBlock) {
 	if ecms != nil {
 		idx := len(ecms) - 1
 		left = make(chan CypherBlock)
