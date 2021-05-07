@@ -102,7 +102,7 @@ func (rnd *Rand) Read(p []byte) (n int, err error) {
 			p = append(p, rnd.blk.CypherBlock[rnd.idx:]...)
 			rnd.idx += leftInBlk
 		} else {
-			p = append(p, rnd.blk.CypherBlock[0:remaining]...)
+			p = append(p, rnd.blk.CypherBlock[rnd.idx:rnd.idx+remaining]...)
 			rnd.idx += remaining
 			break
 		}
