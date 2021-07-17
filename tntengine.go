@@ -31,11 +31,12 @@ var (
 // TntEngine type defines the encryption/decryption machine (rotors and
 // permutators).
 type TntEngine struct {
-	engineType  string // "E)ncrypt" or "D)ecrypt"
-	engine      []Crypter
-	left, right chan CypherBlock
-	jc1Key      *jc1.UberJc1
-	cntrKey     string
+	engineType    string // "E)ncrypt" or "D)ecrypt"
+	engine        []Crypter
+	left, right   chan CypherBlock
+	jc1Key        *jc1.UberJc1
+	cntrKey       string
+	maximalStates *big.Int
 }
 
 // Left is a getter that returns the input channel for the TntEngine.
@@ -102,6 +103,12 @@ func (e *TntEngine) EngineType() string {
 	return e.engineType
 }
 
+// MaximalStates is a getter function that returns maximum number of states that the
+// engine can be in before repeating.
+func (e *TntEngine) MaximalStates() *big.Int {
+	return e.maximalStates
+}
+
 // Init will initialize the TntEngine generating new Rotors and Permutators using
 // the proForma rotors and permutators in complex way, updating the rotors and
 // permutators in place.
@@ -129,16 +136,19 @@ func (e *TntEngine) Init(secret []byte, proFormaFileName string) {
 	// sizes in a random order based on the key.
 	cycleSizes = random.Perm(len(CycleSizes))
 	// Update the rotors and permutators in a very non-linear fashion.
+	e.maximalStates = BigOne
 	for pfCnt, machine := range e.engine {
 		switch v := machine.(type) {
 		default:
 			fmt.Fprintf(os.Stderr, "Unknown machine: %v\n", v)
 		case *Rotor:
 			updateRotor(machine.(*Rotor), random)
+			e.maximalStates = e.maximalStates.Mul(e.maximalStates, big.NewInt(int64(machine.(*Rotor).Size)))
 		case *Permutator:
 			p := new(Permutator)
 			updatePermutator(p, random)
 			e.engine[pfCnt] = p
+			e.maximalStates = e.maximalStates.Mul(e.maximalStates, big.NewInt(int64(p.MaximalStates)))
 		case *Counter:
 			machine.(*Counter).SetIndex(BigZero)
 		}
