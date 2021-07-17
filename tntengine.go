@@ -136,7 +136,7 @@ func (e *TntEngine) Init(secret []byte, proFormaFileName string) {
 	// sizes in a random order based on the key.
 	cycleSizes = random.Perm(len(CycleSizes))
 	// Update the rotors and permutators in a very non-linear fashion.
-	e.maximalStates = BigOne
+	e.maximalStates = new(big.Int).Set(BigOne)
 	for pfCnt, machine := range e.engine {
 		switch v := machine.(type) {
 		default:
@@ -187,7 +187,6 @@ func (e *TntEngine) BuildCipherMachine() {
 func createProFormaMachine(machineFileName string) *[]Crypter {
 	var newMachine []Crypter
 	if len(machineFileName) == 0 {
-		// log.Println("Using built in proforma rotors and permutators")
 		// Create the proforma encryption machine.  The layout of the machine is:
 		// 		rotor, rotor, permutator, rotor, rotor, permutator, rotor, rotor
 		newMachine = []Crypter{
@@ -195,7 +194,6 @@ func createProFormaMachine(machineFileName string) *[]Crypter {
 			Rotor3, Rotor4, Permutator2,
 			Rotor5, Rotor6}
 	} else {
-		// log.Printf("Using proforma rotors and permutators from %s\n", machineFileName)
 		in, err := os.Open(machineFileName)
 		checkFatal(err)
 		jDecoder := json.NewDecoder(in)

@@ -258,7 +258,7 @@ type Counter struct {
 
 // SetIndex - sets the initial index value
 func (cntr *Counter) SetIndex(index *big.Int) {
-	cntr.index = index
+	cntr.index = new(big.Int).Set(index)
 }
 
 // Index - retrieves the current index value
