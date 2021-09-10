@@ -251,7 +251,7 @@ type Crypter interface {
 }
 
 // Counter is a cryptor that does not encrypt/decrypt any data but counts the
-// number of clobks that were encrypted.
+// number of blocks that were encrypted.
 type Counter struct {
 	index *big.Int
 }
