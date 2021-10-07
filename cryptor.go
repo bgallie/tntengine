@@ -21,7 +21,7 @@ const (
 
 var (
 	// RotorSizes is an array of possible rotor sizes.  It consists of prime
-	// numbers less than 8160 to allow for 256 bit splce at the end of the rotor.
+	// numbers less than 7936 to allow for 256 bit splce at the end of the rotor.
 	// The rotor sizes selected from this list will maximizes the number of
 	// unique states the rotors can take.
 	RotorSizes = [...]int{
@@ -57,7 +57,7 @@ var (
 		{2, 0, 1, 3}, {2, 0, 3, 1}, {2, 1, 0, 3}, {2, 1, 3, 0}, {2, 3, 1, 0}, {2, 3, 0, 1},
 		{3, 0, 1, 2}, {3, 0, 2, 1}, {3, 1, 0, 2}, {3, 1, 2, 0}, {3, 2, 1, 0}, {3, 2, 0, 1}}
 
-	// Create the proforma rotors and permutator used to create the actual rotors and permutator to use.
+	// Define the proforma rotors and permutator used to create the actual rotors and permutators to use.
 	Rotor1 = NewRotor(1783, 863, 1033, []byte{
 		184, 25, 190, 250, 35, 11, 111, 218, 111, 1, 44, 59, 137, 12, 184, 22,
 		154, 226, 101, 88, 167, 109, 45, 92, 19, 164, 132, 233, 34, 133, 138, 222,
@@ -218,7 +218,7 @@ type CypherBlock struct {
 
 // Marshall converts a CypherBlock into a slice of bytes
 func (cblk *CypherBlock) Marshall() []byte {
-	b := make([]byte, 0, 0)
+	b := make([]byte, 0)
 	b = append(b, byte(cblk.Length))
 	b = append(b, cblk.CypherBlock[:]...)
 	return b
@@ -232,10 +232,10 @@ func (cblk *CypherBlock) Unmarshall(b []byte) *CypherBlock {
 	return blk
 }
 
-// String formats a string representing the permutator (as Go source code).
+// String formats a string representing the CypherBlock (as Go source code).
 func (cblk *CypherBlock) String() string {
 	var output bytes.Buffer
-	output.WriteString(fmt.Sprint("CypherBlock: "))
+	output.WriteString("CypherBlock: ")
 	output.WriteString(fmt.Sprintf("\t     Length: %d\n", cblk.Length))
 	output.WriteString(fmt.Sprintf("\tCypherBlock:\t% X\n", cblk.CypherBlock[0:16]))
 	output.WriteString(fmt.Sprintf("\t\t\t% X", cblk.CypherBlock[16:]))
