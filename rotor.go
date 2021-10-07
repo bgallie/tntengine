@@ -62,7 +62,7 @@ func (r *Rotor) SetIndex(idx *big.Int) {
 		rem := new(big.Int)
 		p = p.Mul(idx, new(big.Int).SetInt64(int64(r.Step)))
 		p = p.Add(p, new(big.Int).SetInt64(int64(r.Start)))
-		q, rem = q.DivMod(p, new(big.Int).SetInt64(int64(r.Size)), rem)
+		_, rem = q.DivMod(p, new(big.Int).SetInt64(int64(r.Size)), rem)
 		r.Current = int(rem.Int64())
 	}
 }

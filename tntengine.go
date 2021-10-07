@@ -19,13 +19,10 @@ import (
 
 var (
 	counter         *Counter = new(Counter)
-	proFormaMachine []Crypter
 	rotorSizes      []int
 	rotorSizesIndex int
 	cycleSizes      []int
 	cycleSizesIndex int
-	proFormaFile    os.File
-	random          *Rand
 )
 
 // TntEngine type defines the encryption/decryption machine (rotors and
@@ -155,7 +152,7 @@ func (e *TntEngine) Init(secret []byte, proFormaFileName string) {
 	}
 	// Now that we have created the new rotors and permutators from the proform
 	// machine, populate the TntEngine with them.
-	newMachine := make([]Crypter, 9, 9)
+	newMachine := make([]Crypter, 9)
 	machineOrder := random.Perm(len(e.engine))
 	for idx, val := range machineOrder {
 		newMachine[idx] = e.engine[val]
@@ -263,7 +260,7 @@ func updatePermutator(p *Permutator, random *Rand) {
 	}
 	// Chose a CycleSizes and randomize order of the values
 	length := len(CycleSizes[cycleSizesIndex])
-	cycles := make([]int, length, length)
+	cycles := make([]int, length)
 	randi := random.Perm(length)
 	for idx, val := range randi {
 		cycles[idx] = CycleSizes[cycleSizes[cycleSizesIndex]][val]

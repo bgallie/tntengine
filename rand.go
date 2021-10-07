@@ -67,7 +67,7 @@ func (rnd *Rand) Int63n(n int64) int64 {
 }
 
 func (rnd *Rand) Perm(n int) []int {
-	res := make([]int, n, n)
+	res := make([]int, n)
 
 	for i := range res {
 		res[i] = i

@@ -117,7 +117,7 @@ func (p *Permutator) cycle() {
 func (p *Permutator) SetIndex(idx *big.Int) {
 	q := new(big.Int)
 	r := new(big.Int)
-	q, r = q.DivMod(idx, big.NewInt(int64(p.MaximalStates)), r)
+	_, r = q.DivMod(idx, big.NewInt(int64(p.MaximalStates)), r)
 	p.CurrentState = int(r.Int64())
 
 	for _, val := range p.Cycles {
@@ -170,7 +170,7 @@ func (p *Permutator) ApplyG(blk *[CypherBlockBytes]byte) *[CypherBlockBytes]byte
 // String formats a string representing the permutator (as Go source code).
 func (p *Permutator) String() string {
 	var output bytes.Buffer
-	output.WriteString(fmt.Sprint("permutator.New([]int{"))
+	output.WriteString("permutator.New([]int{")
 
 	for _, v := range p.Cycles[0 : NumberPermutationCycles-1] {
 		output.WriteString(fmt.Sprintf("%d, ", v.Length))
