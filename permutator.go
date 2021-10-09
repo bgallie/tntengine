@@ -1,6 +1,7 @@
 // This is free and unencumbered software released into the public domain.
 // See the UNLICENSE file for details.
 
+// Package tntengine - define TntEngine type and it's methods
 package tntengine
 
 import (
@@ -25,7 +26,7 @@ type Permutator struct {
 	MaximalStates int                   // Maximum number of cycles this permutator can have before repeating.
 	Cycles        []Cycle               // Cycles ordered by the current permutation.
 	Randp         []byte                // Values 0 - 255 in a random order.
-	bitPerm       [CypherBlockSize]byte // Permutation table created from randp.
+	bitPerm       [CypherBlockSize]byte // Permutation table created from Randp.
 }
 
 // New creates a permutator and initializes it
