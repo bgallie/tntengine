@@ -183,13 +183,32 @@ func (e *TntEngine) BuildCipherMachine() {
 // permutators are used to initialize the proForma machine.
 func createProFormaMachine(machineFileName string) *[]Crypter {
 	var newMachine []Crypter
+	// getCyclesSizes will extract the lengths of the given permutation cycles
+	// and return them as a slice of ints.
+	getCycleSizes := func(cycles []Cycle) []int {
+		cycleSizes := make([]int, len(cycles))
+		for i, v := range cycles {
+			cycleSizes[i] = v.Length
+		}
+		return cycleSizes
+	}
 	if len(machineFileName) == 0 {
 		// Create the proforma encryption machine.  The layout of the machine is:
 		// 		rotor, rotor, permutator, rotor, rotor, permutator, rotor, rotor
+
+		// Create the ProFormaMachine by making a copy of the hardcoded proforma rotors and permutators.
+		// This resolves an issue running tests where TntEngine.Init() is called multiple times which
+		// caused a failure on the second call.
 		newMachine = []Crypter{
-			Rotor1, Rotor2, Permutator1,
-			Rotor3, Rotor4, Permutator2,
-			Rotor5, Rotor6}
+			NewRotor(Rotor1.Size, Rotor1.Start, Rotor1.Step, append([]byte(nil), Rotor1.Rotor...)),
+			NewRotor(Rotor2.Size, Rotor2.Start, Rotor2.Step, append([]byte(nil), Rotor2.Rotor...)),
+			NewPermutator(getCycleSizes(Permutator1.Cycles), append([]byte(nil), Permutator1.Randp...)),
+			NewRotor(Rotor3.Size, Rotor3.Start, Rotor3.Step, append([]byte(nil), Rotor3.Rotor...)),
+			NewRotor(Rotor4.Size, Rotor4.Start, Rotor4.Step, append([]byte(nil), Rotor4.Rotor...)),
+			NewPermutator(getCycleSizes(Permutator2.Cycles), append([]byte(nil), Permutator2.Randp...)),
+			NewRotor(Rotor5.Size, Rotor5.Start, Rotor5.Step, append([]byte(nil), Rotor5.Rotor...)),
+			NewRotor(Rotor6.Size, Rotor6.Start, Rotor6.Step, append([]byte(nil), Rotor6.Rotor...)),
+		}
 	} else {
 		in, err := os.Open(machineFileName)
 		checkFatal(err)
