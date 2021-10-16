@@ -5,9 +5,11 @@
 package tntengine
 
 import (
+	"bufio"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"math/big"
 	"os"
@@ -112,7 +114,14 @@ func (e *TntEngine) MaximalStates() *big.Int {
 func (e *TntEngine) Init(secret []byte, proFormaFileName string) {
 	e.jc1Key = jc1.NewUberJc1(secret)
 	// Create an ecryption machine based on the proForma rotors and permutators.
-	e.engine = *createProFormaMachine(proFormaFileName)
+	var pfmReader io.Reader = nil
+	if len(proFormaFileName) != 0 {
+		in, err := os.Open(proFormaFileName)
+		checkFatal(err)
+		defer in.Close()
+		pfmReader = bufio.NewReader(in)
+	}
+	e.engine = *createProFormaMachine(pfmReader)
 	e.left, e.right = createEncryptMachine(e.engine...)
 	// Create a random number function [func(max int) int] that uses psudo-
 	// random data generated the proforma encryption machine.
@@ -121,11 +130,20 @@ func (e *TntEngine) Init(secret []byte, proFormaFileName string) {
 	// the count of blocks already encrypted to use as a starting point for the
 	// encryption of the next message.
 	k := make([]byte, 1024)
-	h := make([]byte, 32)
+	blk := *new(CypherBlock)
+	blk.Length = 32
+	h := blk.CypherBlock[:]
 	d := sha3.NewShake256()
 	d.Write(e.jc1Key.XORKeyStream(k))
 	d.Read(h)
-	e.cntrKey = hex.EncodeToString(h)
+	// Encrypt the hash starting at block 1234567890 (no good reason for this number)
+	// to make it specific to the proForma machine used.
+	iCnt, _ := new(big.Int).SetString("1234567890", 10)
+	e.SetIndex(iCnt)
+	e.left <- blk
+	blk = <-e.right
+	e.cntrKey = hex.EncodeToString(blk.CypherBlock[:])
+	e.SetIndex(BigZero)
 	// Create a permutaion of the rotor indices to allow picking the rotors in
 	// a random order based on the key.
 	rotorSizes = random.Perm(len(RotorSizes))
@@ -181,7 +199,7 @@ func (e *TntEngine) BuildCipherMachine() {
 // TNT2 encryption machine.  If the machineFileName is not empty then the
 // proForma machine is loaded from that file, else the hardcoded rotors and
 // permutators are used to initialize the proForma machine.
-func createProFormaMachine(machineFileName string) *[]Crypter {
+func createProFormaMachine(pfmReader io.Reader) *[]Crypter {
 	var newMachine []Crypter
 	// getCyclesSizes will extract the lengths of the given permutation cycles
 	// and return them as a slice of ints.
@@ -192,7 +210,7 @@ func createProFormaMachine(machineFileName string) *[]Crypter {
 		}
 		return cycleSizes
 	}
-	if len(machineFileName) == 0 {
+	if pfmReader == nil {
 		// Create the proforma encryption machine.  The layout of the machine is:
 		// 		rotor, rotor, permutator, rotor, rotor, permutator, rotor, rotor
 
@@ -210,9 +228,7 @@ func createProFormaMachine(machineFileName string) *[]Crypter {
 			NewRotor(Rotor6.Size, Rotor6.Start, Rotor6.Step, append([]byte(nil), Rotor6.Rotor...)),
 		}
 	} else {
-		in, err := os.Open(machineFileName)
-		checkFatal(err)
-		jDecoder := json.NewDecoder(in)
+		jDecoder := json.NewDecoder(pfmReader)
 		// Create the proforma encryption machine from the given proforma machine file.
 		// The layout of the machine is:
 		// 		rotor, rotor, permutator, rotor, rotor, permutator, rotor, rotor
@@ -226,12 +242,12 @@ func createProFormaMachine(machineFileName string) *[]Crypter {
 				fmt.Fprintf(os.Stderr, "Unknown machine: %v\n", v)
 			case *Rotor:
 				r := new(Rotor)
-				err = jDecoder.Decode(&r)
+				err := jDecoder.Decode(&r)
 				checkFatal(err)
 				newMachine[cnt] = r
 			case *Permutator:
 				p := new(Permutator)
-				err = jDecoder.Decode(&p)
+				err := jDecoder.Decode(&p)
 				checkFatal(err)
 				newMachine[cnt] = p
 			}
