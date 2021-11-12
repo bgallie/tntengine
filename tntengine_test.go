@@ -83,7 +83,7 @@ func TestTntEngine_CounterKey(t *testing.T) {
 			name:             "ttec2",
 			key:              "SecretKey",
 			proFormaFileName: "test.proforma.json",
-			want:             "dfba55c57abb71acc5039c3e059d4b78d3375badec44b3c5b0b838bb856dd28b",
+			want:             "b636826859a309489817cd43c573944e9d3ce8c5afad1160beedcb2104dfce12",
 		},
 	}
 	for _, tt := range tests {

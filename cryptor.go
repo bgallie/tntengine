@@ -15,7 +15,7 @@ const (
 	BitsPerByte             = 8
 	CypherBlockSize         = 256 // bits
 	CypherBlockBytes        = CypherBlockSize / BitsPerByte
-	MaximumRotorSize        = 8192
+	MaximumRotorSize        = 8192 // without the splice at the end.
 	NumberPermutationCycles = 4
 	RotorSizeBytes          = MaximumRotorSize / BitsPerByte
 )
@@ -26,11 +26,16 @@ var (
 	// The rotor sizes selected from this list will maximizes the number of
 	// unique states the rotors can take.
 	RotorSizes = [...]int{
-		7523, 7529, 7537, 7541, 7547, 7549, 7559, 7561, 7573, 7577,
-		7583, 7589, 7591, 7603, 7607, 7621, 7639, 7643, 7649, 7669,
-		7673, 7681, 7687, 7691, 7699, 7703, 7717, 7723, 7727, 7741,
-		7753, 7757, 7759, 7789, 7793, 7817, 7823, 7829, 7841, 7853,
-		7867, 7873, 7877, 7879, 7883, 7901, 7907, 7919, 7927, 7933}
+		7507, 7517, 7523, 7529, 7537, 7541, 7547, 7549, 7559, 7561,
+		7573, 7577, 7583, 7589, 7591, 7603, 7607, 7621, 7639, 7643,
+		7649, 7669, 7673, 7681, 7687, 7691, 7699, 7703, 7717, 7723,
+		7727, 7741, 7753, 7757, 7759, 7789, 7793, 7817, 7823, 7829,
+		7841, 7853, 7867, 7873, 7877, 7879, 7883, 7901, 7907, 7919,
+		7927, 7933, 7727, 7741, 7753, 7757, 7759, 7789, 7793, 7817,
+		7823, 7829, 7841, 7853, 7867, 7873, 7877, 7879, 7883, 7901,
+		7907, 7919, 7927, 7933, 7937, 7949, 7951, 7963, 7993, 8009,
+		8011, 8017, 8039, 8053, 8059, 8069, 8081, 8087, 8089, 8093,
+		8101, 8111, 8117, 8123, 8147, 8161, 8167, 8171, 8179, 8191}
 
 	// CycleSizes is an array of cycles to use when cycling the permutation table.
 	// There are 4 cycles in each entry and they meet the following criteria:

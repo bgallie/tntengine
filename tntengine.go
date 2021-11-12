@@ -275,8 +275,7 @@ func updateRotor(r *Rotor, random *Rand) {
 	adjRotor := make([]byte, blkBytes)
 	r.Rotor = append(r.Rotor, adjRotor...)
 	// Fill the rotor with random data using TNT2 encryption to generate the
-	// random data by encrypting the next 32 bytes of data from the uberJC1
-	// algorithm until the next rotor is filled.
+	// random data to fill the rotor.
 	random.Read(r.Rotor)
 
 	// update the rotor with the new size, start, and step and slice the first
