@@ -14,12 +14,14 @@ type Rand struct {
 	tntMachine *TntEngine
 	idx        int
 	blk        CypherBlock
+	firstRun   bool
 }
 
 func NewRand(src *TntEngine) *Rand {
 	var rand Rand
 	rand.tntMachine = src
 	rand.idx = CypherBlockBytes
+	rand.firstRun = true
 	return &rand
 }
 
@@ -84,6 +86,10 @@ func (rnd *Rand) Perm(n int) []int {
 
 func (rnd *Rand) Read(p []byte) (n int, err error) {
 	err = nil
+	if rnd.firstRun {
+		_ = copy(rnd.blk.CypherBlock[:], rnd.tntMachine.jc1Key.XORKeyStream(rnd.blk.CypherBlock[:]))
+		rnd.firstRun = false
+	}
 	p = p[:0]
 	left := rnd.tntMachine.Left()
 	right := rnd.tntMachine.Right()
@@ -91,7 +97,6 @@ func (rnd *Rand) Read(p []byte) (n int, err error) {
 		if rnd.idx >= CypherBlockBytes {
 			if rnd.blk.Length == 0 {
 				rnd.blk.Length = CypherBlockBytes
-				_ = copy(rnd.blk.CypherBlock[:], rnd.tntMachine.jc1Key.XORKeyStream(rnd.blk.CypherBlock[:]))
 			}
 			left <- rnd.blk
 			rnd.blk = <-right
