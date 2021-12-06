@@ -283,7 +283,7 @@ func (cntr *Counter) ApplyG(blk *[CypherBlockBytes]byte) *[CypherBlockBytes]byte
 	return blk
 }
 
-// SubBlock - subtracts (not XOR) the key from the data to be decrypted
+// SubBlock -  subtracts (not XOR) the key from the data to be decrypted
 func SubBlock(blk, key *[CypherBlockBytes]byte) *[CypherBlockBytes]byte {
 	var p int
 

@@ -74,7 +74,7 @@ func (e *TntEngine) Index() (cntr *big.Int) {
 // the TntEngine will be ready start encrypting/decrypting at the correct block.
 func (e *TntEngine) SetIndex(iCnt *big.Int) {
 	for _, machine := range e.engine {
-		machine.SetIndex(iCnt)
+		machine.SetIndex(new(big.Int).Set(iCnt))
 	}
 }
 

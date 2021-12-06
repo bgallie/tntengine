@@ -6,23 +6,22 @@ package tntengine
 
 import (
 	"math/bits"
+	"reflect"
 )
 
-// var blk CypherBlock
+var emptyBlk CypherBlock
 
 type Rand struct {
 	tntMachine *TntEngine
 	idx        int
 	blk        CypherBlock
-	firstRun   bool
 }
 
 func NewRand(src *TntEngine) *Rand {
-	var rand Rand
+	rand := new(Rand)
 	rand.tntMachine = src
 	rand.idx = CypherBlockBytes
-	rand.firstRun = true
-	return &rand
+	return rand
 }
 
 func (rnd *Rand) Intn(max int) int {
@@ -86,18 +85,15 @@ func (rnd *Rand) Perm(n int) []int {
 
 func (rnd *Rand) Read(p []byte) (n int, err error) {
 	err = nil
-	if rnd.firstRun {
+	if reflect.DeepEqual(rnd.blk, emptyBlk) {
+		rnd.blk.Length = CypherBlockBytes
 		_ = copy(rnd.blk.CypherBlock[:], rnd.tntMachine.jc1Key.XORKeyStream(rnd.blk.CypherBlock[:]))
-		rnd.firstRun = false
 	}
 	p = p[:0]
 	left := rnd.tntMachine.Left()
 	right := rnd.tntMachine.Right()
 	for {
 		if rnd.idx >= CypherBlockBytes {
-			if rnd.blk.Length == 0 {
-				rnd.blk.Length = CypherBlockBytes
-			}
 			left <- rnd.blk
 			rnd.blk = <-right
 			rnd.idx = 0
