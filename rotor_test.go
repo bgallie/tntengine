@@ -25,7 +25,7 @@ func TestNewRotor(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewRotor(tt.args.size, tt.args.start, tt.args.step, tt.args.rotor); !reflect.DeepEqual(got, tt.want) {
+			if got := new(Rotor).New(tt.args.size, tt.args.start, tt.args.step, tt.args.rotor); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NewRotor() = %v, want %v", got, tt.want)
 			}
 		})
@@ -41,9 +41,7 @@ func TestRotor_Update(t *testing.T) {
 		Rotor   []byte
 	}
 	type args struct {
-		size  int
-		start int
-		step  int
+		random *Rand
 	}
 	tests := []struct {
 		name   string
@@ -61,7 +59,7 @@ func TestRotor_Update(t *testing.T) {
 				Current: tt.fields.Current,
 				Rotor:   tt.fields.Rotor,
 			}
-			r.Update(tt.args.size, tt.args.start, tt.args.step)
+			r.Update(tt.args.random)
 		})
 	}
 }

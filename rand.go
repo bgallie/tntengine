@@ -86,7 +86,7 @@ func (rnd *Rand) Perm(n int) []int {
 func (rnd *Rand) Read(p []byte) (n int, err error) {
 	err = nil
 	if reflect.DeepEqual(rnd.blk, emptyBlk) {
-		rnd.blk.Length = CypherBlockBytes
+		rnd.blk.Length = int8(CypherBlockBytes)
 		_ = copy(rnd.blk.CypherBlock[:], rnd.tntMachine.jc1Key.XORKeyStream(rnd.blk.CypherBlock[:]))
 	}
 	p = p[:0]
