@@ -100,7 +100,7 @@ var (
 		12, 140, 182, 16, 67, 146, 32, 30, 26, 92, 157, 195, 158, 117, 29, 26,
 		115, 201, 171, 66, 251, 125, 141, 213, 131, 127, 40, 102})
 
-	Permutator1 = NewPermutator([]int{43, 57, 73, 83}, []byte{
+	Permutator1 = new(Permutator).New([]int{43, 57, 73, 83}, []byte{
 		207, 252, 142, 205, 239, 35, 230, 62, 69, 94, 166, 89, 184, 81, 144, 120,
 		27, 167, 39, 224, 75, 243, 87, 99, 47, 105, 163, 123, 129, 225, 2, 242,
 		65, 43, 12, 113, 30, 102, 240, 78, 137, 109, 112, 210, 214, 118, 106, 22,
@@ -154,7 +154,7 @@ var (
 		38, 235, 135, 115, 15, 14, 19, 163, 29, 185, 234, 35, 191, 251, 64, 151,
 		9, 166, 252, 7, 125, 133, 7, 156, 45, 14})
 
-	Permutator2 = NewPermutator([]int{49, 51, 73, 83}, []byte{
+	Permutator2 = new(Permutator).New([]int{49, 51, 73, 83}, []byte{
 		248, 250, 32, 91, 122, 166, 115, 61, 178, 111, 37, 35, 82, 167, 157, 66,
 		22, 65, 47, 1, 195, 182, 190, 73, 19, 218, 237, 76, 140, 155, 18, 11,
 		30, 207, 105, 49, 230, 83, 10, 251, 52, 136, 99, 212, 108, 154, 113, 41,
@@ -250,6 +250,7 @@ func (cblk *CypherBlock) String() string {
 
 // Crypter interface
 type Crypter interface {
+	Update(*Rand)
 	SetIndex(*big.Int)
 	Index() *big.Int
 	ApplyF(*[CypherBlockBytes]byte) *[CypherBlockBytes]byte
@@ -260,6 +261,10 @@ type Crypter interface {
 // number of blocks that were encrypted.
 type Counter struct {
 	index *big.Int
+}
+
+func (cntr *Counter) Update(random *Rand) {
+	// Do nothing.S
 }
 
 // SetIndex - sets the initial index value
@@ -286,26 +291,22 @@ func (cntr *Counter) ApplyG(blk *[CypherBlockBytes]byte) *[CypherBlockBytes]byte
 // SubBlock -  subtracts (not XOR) the key from the data to be decrypted
 func SubBlock(blk, key *[CypherBlockBytes]byte) *[CypherBlockBytes]byte {
 	var p int
-
 	for idx, val := range *blk {
 		p = p + int(val) - int(key[idx])
 		blk[idx] = byte(p & 0xFF)
 		p = p >> BitsPerByte
 	}
-
 	return blk
 }
 
 // AddBlock - adds (not XOR) the data to be encrypted with the key.
 func AddBlock(blk, key *[CypherBlockBytes]byte) *[CypherBlockBytes]byte {
 	var p int
-
 	for i, v := range *blk {
 		p += int(v) + int(key[i])
 		blk[i] = byte(p & 0xFF)
 		p >>= BitsPerByte
 	}
-
 	return blk
 }
 
@@ -328,7 +329,6 @@ func EncryptMachine(ecm Crypter, left chan CypherBlock) chan CypherBlock {
 			right <- inp
 		}
 	}(ecm, left, right)
-
 	return right
 }
 
@@ -344,12 +344,10 @@ func DecryptMachine(ecm Crypter, left chan CypherBlock) chan CypherBlock {
 				right <- inp
 				break
 			}
-
 			inp.CypherBlock = *ecm.ApplyG(&inp.CypherBlock)
 			right <- inp
 		}
 	}(ecm, left, right)
-
 	return right
 }
 
@@ -359,14 +357,12 @@ func createEncryptMachine(ecms ...Crypter) (left chan CypherBlock, right chan Cy
 		idx := 0
 		left = make(chan CypherBlock)
 		right = EncryptMachine(ecms[idx], left)
-
 		for idx++; idx < len(ecms); idx++ {
 			right = EncryptMachine(ecms[idx], right)
 		}
 	} else {
 		panic("you must give at least one encryption device!")
 	}
-
 	return
 }
 
@@ -376,13 +372,11 @@ func createDecryptMachine(ecms ...Crypter) (left chan CypherBlock, right chan Cy
 		idx := len(ecms) - 1
 		left = make(chan CypherBlock)
 		right = DecryptMachine(ecms[idx], left)
-
 		for idx--; idx >= 0; idx-- {
 			right = DecryptMachine(ecms[idx], right)
 		}
 	} else {
 		panic("you must give at least one decryption device!")
 	}
-
 	return
 }

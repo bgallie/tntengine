@@ -46,7 +46,7 @@ func TestNewPermutator(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewPermutator(tt.args.cycleSizes, tt.args.randp); !reflect.DeepEqual(got, tt.want) {
+			if got := new(Permutator).New(tt.args.cycleSizes, tt.args.randp); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NewPermutator() = %v, want %v", got, tt.want)
 			}
 		})
@@ -55,43 +55,19 @@ func TestNewPermutator(t *testing.T) {
 
 func TestPermutator_Update(t *testing.T) {
 	type args struct {
-		cycleSizes []int
-		randp      []byte
+		random *Rand
 	}
 	tests := []struct {
 		name string
 		args args
 		want *Permutator
 	}{
-		{
-			name: "tnp1",
-			args: args{
-				cycleSizes: []int{43, 57, 73, 83},
-				randp: []byte{
-					207, 252, 142, 205, 239, 35, 230, 62, 69, 94, 166, 89, 184, 81, 144, 120,
-					27, 167, 39, 224, 75, 243, 87, 99, 47, 105, 163, 123, 129, 225, 2, 242,
-					65, 43, 12, 113, 30, 102, 240, 78, 137, 109, 112, 210, 214, 118, 106, 22,
-					232, 181, 164, 255, 70, 198, 160, 44, 231, 20, 228, 53, 85, 238, 178, 133,
-					95, 194, 245, 234, 13, 147, 134, 25, 244, 91, 176, 38, 46, 1, 217, 249,
-					250, 52, 182, 73, 206, 140, 216, 145, 60, 218, 213, 8, 151, 101, 156, 5,
-					241, 67, 49, 42, 212, 180, 92, 21, 16, 130, 128, 126, 98, 199, 162, 188,
-					117, 191, 66, 84, 57, 208, 158, 247, 41, 131, 227, 155, 61, 165, 253, 51,
-					119, 103, 179, 93, 122, 83, 183, 116, 79, 222, 50, 59, 80, 110, 186, 141,
-					90, 152, 127, 107, 54, 71, 185, 161, 169, 34, 148, 146, 157, 138, 24, 237,
-					76, 196, 192, 251, 189, 201, 219, 86, 68, 37, 33, 82, 11, 170, 246, 72,
-					229, 28, 32, 132, 23, 197, 108, 236, 220, 17, 150, 190, 171, 96, 26, 204,
-					209, 31, 211, 4, 14, 136, 195, 45, 172, 111, 154, 36, 149, 226, 202, 187,
-					193, 223, 139, 175, 124, 9, 3, 58, 125, 88, 15, 6, 121, 235, 221, 200,
-					114, 254, 135, 168, 7, 29, 159, 48, 40, 115, 143, 203, 215, 77, 18, 55,
-					56, 177, 100, 0, 173, 104, 248, 97, 74, 63, 233, 19, 64, 174, 153, 10},
-			},
-			want: Permutator1,
-		},
+		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p := new(Permutator)
-			p.Update(tt.args.cycleSizes, tt.args.randp)
+			p.Update(tt.args.random)
 			if !reflect.DeepEqual(p, tt.want) {
 				t.Errorf("Updated Permutator() = %v, want %v", p, tt.want)
 			}

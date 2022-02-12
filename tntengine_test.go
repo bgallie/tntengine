@@ -306,7 +306,7 @@ func Test_updateRotor(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			updateRotor(tt.args.r, tt.args.random)
+			tt.args.r.Update(tt.args.random)
 		})
 	}
 }
@@ -324,7 +324,7 @@ func Test_updatePermutator(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			updatePermutator(tt.args.p, tt.args.random)
+			tt.args.p.Update(tt.args.random)
 		})
 	}
 }

@@ -1,6 +1,5 @@
 // This is free and unencumbered software released into the public domain.
 // See the UNLICENSE file for details.
-
 // Package tntengine - define TntEngine type and it's methods
 package tntengine
 
@@ -34,9 +33,8 @@ func (r *Rotor) Update(random *Rand) {
 	// Get size, start and step of the new rotor
 	rotorSize := RotorSizes[rotorSizes[rotorSizesIndex]]
 	rotorSizesIndex = (rotorSizesIndex + 1) % len(RotorSizes)
-	r.Start = random.Intn(rotorSize)
-	r.Step = random.Intn(rotorSize)
-
+	start := random.Intn(rotorSize)
+	step := random.Intn(rotorSize)
 	// blkCnt is the total number of bytes needed to hold rotorSize bits + a slice of 256 bits
 	blkCnt := (((rotorSize + CypherBlockSize + 7) / 8) + 31) / 32
 	// blkBytes is the number of bytes rotor r needs to increase to hold the new rotor.
@@ -47,7 +45,10 @@ func (r *Rotor) Update(random *Rand) {
 	// Fill the rotor with random data using TNT2 encryption to generate the
 	// random data to fill the rotor.
 	random.Read(r.Rotor)
+	r.Size = rotorSize
 	r.Current = r.Size
+	r.Step = step
+	r.Start = start
 	r.sliceRotor()
 }
 
