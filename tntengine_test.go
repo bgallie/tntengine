@@ -1,7 +1,6 @@
 // This is free and unencumbered software released into the public domain.
 // See the UNLICENSE file for details.
 
-// Package tntengine - define TntEngine type and it's methods
 package tntengine
 
 import (
@@ -77,13 +76,13 @@ func TestTntEngine_CounterKey(t *testing.T) {
 			name:             "ttec1",
 			key:              "SecretKey",
 			proFormaFileName: "",
-			want:             "a24d7bb490d928b8c9bf74b509c31d5d1d79b2039c38e3252be0a857ac619be2",
+			want:             "e922e73a0f662987531e0950e7f8f11093f6b7a8bb043306b1feb723b19ef61b",
 		},
 		{
 			name:             "ttec2",
 			key:              "SecretKey",
 			proFormaFileName: "test.proforma.json",
-			want:             "b636826859a309489817cd43c573944e9d3ce8c5afad1160beedcb2104dfce12",
+			want:             "0c9eba881bf288ccbbb4001229b7700fcbc90ec5ef08613946c4b629c111194d",
 		},
 	}
 	for _, tt := range tests {

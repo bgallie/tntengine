@@ -4,14 +4,24 @@
 package tntengine
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 )
 
+func closeTntMachine(e *TntEngine) {
+	blk := new(CypherBlock)
+	e.Left() <- *blk
+	<-e.Right()
+}
 func TestNewRand(t *testing.T) {
+	fmt.Println("Running TestNewRand")
 	tntMachine := new(TntEngine)
 	tntMachine.Init([]byte("SecretKey"), "")
+	tntMachine.SetEngineType("E")
 	tntMachine.SetIndex(BigZero)
+	tntMachine.BuildCipherMachine()
+	defer closeTntMachine(tntMachine)
 	type args struct {
 		src *TntEngine
 	}
@@ -24,8 +34,8 @@ func TestNewRand(t *testing.T) {
 		{
 			name:  "NewRandTest 1",
 			args:  args{tntMachine},
-			want:  &Rand{tntMachine, 32, emptyBlk},
-			wantK: "a24d7bb490d928b8c9bf74b509c31d5d1d79b2039c38e3252be0a857ac619be2",
+			want:  &Rand{tntMachine, CypherBlockBytes, emptyBlk},
+			wantK: "ab2677fa2eecca36541ea85fd8d871203383b898bb025b8ec8fd5f24719eee1c",
 		},
 	}
 	for _, tt := range tests {
@@ -33,21 +43,22 @@ func TestNewRand(t *testing.T) {
 			if tntMachine.cntrKey != tt.wantK {
 				t.Errorf("tntMachine.cntrKey = %v, want %v", tntMachine.cntrKey, tt.wantK)
 			}
-			if got := NewRand(tt.args.src); !reflect.DeepEqual(got, tt.want) {
+			if got := new(Rand).New(tt.args.src); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NewRand() = %v, want %v", got, tt.want)
 			}
 		})
 	}
-	var blk CypherBlock
-	tntMachine.left <- blk
-	<-tntMachine.right
 }
 
 func TestRand_Intn(t *testing.T) {
+	fmt.Println("Running TestRand_Intn")
 	tntMachine := new(TntEngine)
 	tntMachine.Init([]byte("SecretKey"), "")
+	tntMachine.SetEngineType("E")
 	tntMachine.SetIndex(BigZero)
-	rnd := NewRand(tntMachine)
+	tntMachine.BuildCipherMachine()
+	defer closeTntMachine(tntMachine)
+	rnd := new(Rand).New(tntMachine)
 	type args struct {
 		max int
 	}
@@ -61,9 +72,9 @@ func TestRand_Intn(t *testing.T) {
 		{
 			name:  "Intn Test 1",
 			args:  args{1000},
-			want:  735,
-			wantK: "a24d7bb490d928b8c9bf74b509c31d5d1d79b2039c38e3252be0a857ac619be2",
-			wantR: &Rand{tntMachine, 32, emptyBlk},
+			want:  658,
+			wantK: "ab2677fa2eecca36541ea85fd8d871203383b898bb025b8ec8fd5f24719eee1c",
+			wantR: &Rand{tntMachine, CypherBlockBytes, emptyBlk},
 		},
 	}
 	for _, tt := range tests {
@@ -79,15 +90,16 @@ func TestRand_Intn(t *testing.T) {
 			}
 		})
 	}
-	var blk CypherBlock
-	tntMachine.left <- blk
-	<-tntMachine.right
 }
 
 func TestRand_Int63n(t *testing.T) {
+	fmt.Println("Running TestRand_Int63n")
 	tntMachine := new(TntEngine)
 	tntMachine.Init([]byte("SecretKey"), "")
+	tntMachine.SetEngineType("E")
 	tntMachine.SetIndex(BigZero)
+	tntMachine.BuildCipherMachine()
+	defer closeTntMachine(tntMachine)
 	rnd := NewRand(tntMachine)
 	type args struct {
 		n int64
@@ -97,12 +109,14 @@ func TestRand_Int63n(t *testing.T) {
 		args  args
 		want  int64
 		wantK string
+		wantR *Rand
 	}{
 		{
 			name:  "Int63n Test 1",
 			args:  args{1000000000},
-			want:  920627160,
-			wantK: "a24d7bb490d928b8c9bf74b509c31d5d1d79b2039c38e3252be0a857ac619be2",
+			want:  378725202,
+			wantK: "ab2677fa2eecca36541ea85fd8d871203383b898bb025b8ec8fd5f24719eee1c",
+			wantR: &Rand{tntMachine, CypherBlockBytes, emptyBlk},
 		},
 	}
 	for _, tt := range tests {
@@ -110,20 +124,24 @@ func TestRand_Int63n(t *testing.T) {
 			if tntMachine.cntrKey != tt.wantK {
 				t.Errorf("tntMachine.cntrKey = %v, want %v", tntMachine.cntrKey, tt.wantK)
 			}
+			if !reflect.DeepEqual(rnd, tt.wantR) {
+				t.Errorf("NewRand() = %v, want %v", rnd, tt.wantR)
+			}
 			if got := rnd.Int63n(tt.args.n); got != tt.want {
 				t.Errorf("Rand.Int63n() = %v, want %v", got, tt.want)
 			}
 		})
 	}
-	var blk CypherBlock
-	tntMachine.left <- blk
-	<-tntMachine.right
 }
 
 func TestRand_Perm(t *testing.T) {
+	fmt.Println("Running TestRand_Perm")
 	tntMachine := new(TntEngine)
 	tntMachine.Init([]byte("SecretKey"), "")
+	tntMachine.SetEngineType("E")
 	tntMachine.SetIndex(BigZero)
+	tntMachine.BuildCipherMachine()
+	defer closeTntMachine(tntMachine)
 	rnd := NewRand(tntMachine)
 	type args struct {
 		n int
@@ -137,8 +155,8 @@ func TestRand_Perm(t *testing.T) {
 		{
 			name:  "Prem Test 1",
 			args:  args{10},
-			want:  []int{4, 5, 9, 8, 2, 3, 1, 0, 7, 6},
-			wantK: "a24d7bb490d928b8c9bf74b509c31d5d1d79b2039c38e3252be0a857ac619be2",
+			want:  []int{4, 5, 1, 9, 7, 0, 8, 3, 2, 6},
+			wantK: "ab2677fa2eecca36541ea85fd8d871203383b898bb025b8ec8fd5f24719eee1c",
 		},
 	}
 	for _, tt := range tests {
@@ -151,15 +169,16 @@ func TestRand_Perm(t *testing.T) {
 			}
 		})
 	}
-	var blk CypherBlock
-	tntMachine.left <- blk
-	<-tntMachine.right
 }
 
 func TestRand_Read(t *testing.T) {
+	fmt.Println("Running TestRand_Read")
 	tntMachine := new(TntEngine)
 	tntMachine.Init([]byte("SecretKey"), "")
+	tntMachine.SetEngineType("E")
 	tntMachine.SetIndex(BigZero)
+	tntMachine.BuildCipherMachine()
+	defer closeTntMachine(tntMachine)
 	rnd := NewRand(tntMachine)
 	type args struct {
 		p []byte
@@ -176,12 +195,12 @@ func TestRand_Read(t *testing.T) {
 			name: "Read test 1",
 			args: args{make([]byte, 36)},
 			want: []byte{
-				54, 223, 167, 216, 81, 187, 38, 251, 20, 83, 159, 174, 191, 59,
-				222, 34, 108, 16, 83, 56, 173, 201, 232, 253, 231, 37, 193, 176,
-				77, 127, 75, 192, 96, 134, 195, 9},
+				150, 146, 227, 82, 118, 72, 175, 66, 223, 10, 193, 120, 210, 114, 24,
+				144, 217, 201, 166, 32, 121, 52, 110, 96, 167, 57, 95, 52, 63, 36, 243,
+				214, 129, 201, 47, 249},
 			wantN:   36,
 			wantErr: false,
-			wantK:   "a24d7bb490d928b8c9bf74b509c31d5d1d79b2039c38e3252be0a857ac619be2",
+			wantK:   "ab2677fa2eecca36541ea85fd8d871203383b898bb025b8ec8fd5f24719eee1c",
 		},
 	}
 	for _, tt := range tests {
@@ -202,7 +221,4 @@ func TestRand_Read(t *testing.T) {
 			}
 		})
 	}
-	var blk CypherBlock
-	tntMachine.left <- blk
-	<-tntMachine.right
 }

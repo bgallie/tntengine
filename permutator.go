@@ -1,8 +1,9 @@
 // This is free and unencumbered software released into the public domain.
 // See the UNLICENSE file for details.
 
-// Package tntengine - define TntEngine type and it's methods
 package tntengine
+
+// Define a permutator used in tntengine
 
 import (
 	"bytes"
@@ -90,12 +91,11 @@ func (p *Permutator) Update(random *Rand) {
 		p.MaximalStates *= p.Cycles[i].Length
 	}
 	p.cycle()
-	fmt.Sprintln(p)
 }
 
 // cycle bitPerm to it's next state.
 func (p *Permutator) nextState() {
-	for idx := range p.Cycles {
+	for idx := 0; idx < len(p.Cycles); idx++ {
 		p.Cycles[idx].Current = (p.Cycles[idx].Current + 1) % p.Cycles[idx].Length
 	}
 	p.CurrentState = (p.CurrentState + 1) % p.MaximalStates
@@ -129,8 +129,8 @@ func (p *Permutator) SetIndex(idx *big.Int) {
 	r := new(big.Int)
 	_, r = q.DivMod(idx, big.NewInt(int64(p.MaximalStates)), r)
 	p.CurrentState = int(r.Int64())
-	for _, val := range p.Cycles {
-		val.Current = p.CurrentState % val.Length
+	for i := 0; i < NumberPermutationCycles; i++ {
+		p.Cycles[i].Current = p.CurrentState % p.Cycles[i].Length
 	}
 	p.cycle()
 }

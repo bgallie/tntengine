@@ -1,11 +1,15 @@
 // This is free and unencumbered software released into the public domain.
 // See the UNLICENSE file for details.
 
-// Package tntengine - define TntEngine type and it's methods
 package tntengine
 
+// Define the random number generator using tntengine as the source.
+
 import (
+	"encoding/hex"
+	"fmt"
 	"math/bits"
+	"os"
 	"reflect"
 )
 
@@ -21,7 +25,15 @@ func NewRand(src *TntEngine) *Rand {
 	rand := new(Rand)
 	rand.tntMachine = src
 	rand.idx = CypherBlockBytes
+	fmt.Fprintln(os.Stderr, "rand.NewRand() is deprecated.  Use New instead")
 	return rand
+}
+
+func (rnd *Rand) New(src *TntEngine) *Rand {
+	fmt.Fprintln(os.Stderr, "Rand.New: creating new Rand object ----------------------------------------------------------------------")
+	rnd.tntMachine = src
+	rnd.idx = CypherBlockBytes
+	return rnd
 }
 
 func (rnd *Rand) Intn(max int) int {
@@ -86,8 +98,10 @@ func (rnd *Rand) Perm(n int) []int {
 func (rnd *Rand) Read(p []byte) (n int, err error) {
 	err = nil
 	if reflect.DeepEqual(rnd.blk, emptyBlk) {
+		fmt.Fprintln(os.Stderr, "Rand.Read: initializing Rand.blk")
+		cntrKeyBytes, _ := hex.DecodeString(rnd.tntMachine.cntrKey)
 		rnd.blk.Length = int8(CypherBlockBytes)
-		_ = copy(rnd.blk.CypherBlock[:], rnd.tntMachine.jc1Key.XORKeyStream(rnd.blk.CypherBlock[:]))
+		_ = copy(rnd.blk.CypherBlock[:], cntrKeyBytes)
 	}
 	p = p[:0]
 	left := rnd.tntMachine.Left()
@@ -97,6 +111,7 @@ func (rnd *Rand) Read(p []byte) (n int, err error) {
 			left <- rnd.blk
 			rnd.blk = <-right
 			rnd.idx = 0
+			fmt.Fprintf(os.Stderr, "Rand.Read: Rand.blk = %v\n", rnd.blk)
 		}
 		leftInBlk := len(rnd.blk.CypherBlock) - rnd.idx
 		remaining := cap(p) - len(p)
