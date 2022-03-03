@@ -25,12 +25,11 @@ func NewRand(src *TntEngine) *Rand {
 	rand := new(Rand)
 	rand.tntMachine = src
 	rand.idx = CypherBlockBytes
-	fmt.Fprintln(os.Stderr, "rand.NewRand() is deprecated.  Use New instead")
+	fmt.Fprintln(os.Stderr, "WARNING: rand.NewRand() is deprecated.  Use Rand.New() instead")
 	return rand
 }
 
 func (rnd *Rand) New(src *TntEngine) *Rand {
-	fmt.Fprintln(os.Stderr, "Rand.New: creating new Rand object ----------------------------------------------------------------------")
 	rnd.tntMachine = src
 	rnd.idx = CypherBlockBytes
 	return rnd
