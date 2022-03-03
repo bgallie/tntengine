@@ -98,7 +98,6 @@ func (rnd *Rand) Perm(n int) []int {
 func (rnd *Rand) Read(p []byte) (n int, err error) {
 	err = nil
 	if reflect.DeepEqual(rnd.blk, emptyBlk) {
-		fmt.Fprintln(os.Stderr, "Rand.Read: initializing Rand.blk")
 		cntrKeyBytes, _ := hex.DecodeString(rnd.tntMachine.cntrKey)
 		rnd.blk.Length = int8(CypherBlockBytes)
 		_ = copy(rnd.blk.CypherBlock[:], cntrKeyBytes)
@@ -111,7 +110,6 @@ func (rnd *Rand) Read(p []byte) (n int, err error) {
 			left <- rnd.blk
 			rnd.blk = <-right
 			rnd.idx = 0
-			fmt.Fprintf(os.Stderr, "Rand.Read: Rand.blk = %v\n", rnd.blk)
 		}
 		leftInBlk := len(rnd.blk.CypherBlock) - rnd.idx
 		remaining := cap(p) - len(p)
