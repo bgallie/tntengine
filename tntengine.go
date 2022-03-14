@@ -26,6 +26,7 @@ var (
 	rotorSizesIndex int
 	cycleSizes      []int
 	cycleSizesIndex int
+	jc1Key          *jc1.UberJc1
 )
 
 // TntEngine type defines the encryption/decryption machine (rotors and
@@ -112,7 +113,7 @@ func (e *TntEngine) MaximalStates() *big.Int {
 // the proForma rotors and permutators in complex way, updating the rotors and
 // permutators in place.
 func (e *TntEngine) Init(secret []byte, proFormaFileName string) {
-	jc1Key := jc1.NewUberJc1(secret)
+	jc1Key = jc1.NewUberJc1(secret)
 	// Create an ecryption machine based on the proForma rotors and permutators.
 	var pfmReader io.Reader = nil
 	if len(proFormaFileName) != 0 {

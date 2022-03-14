@@ -98,6 +98,7 @@ func (rnd *Rand) Read(p []byte) (n int, err error) {
 	err = nil
 	if reflect.DeepEqual(rnd.blk, emptyBlk) {
 		cntrKeyBytes, _ := hex.DecodeString(rnd.tntMachine.cntrKey)
+		cntrKeyBytes = jc1Key.XORKeyStream(cntrKeyBytes)
 		rnd.blk.Length = int8(CypherBlockBytes)
 		_ = copy(rnd.blk.CypherBlock[:], cntrKeyBytes)
 	}
