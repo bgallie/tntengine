@@ -3,7 +3,7 @@
 
 package tntengine
 
-// Define the tntengine tyep and it's methods
+// Define the tntengine type and it's methods
 
 import (
 	"bufio"
@@ -231,16 +231,14 @@ func createProFormaMachine(pfmReader io.Reader) *[]Crypter {
 		// Create the proforma encryption machine from the given proforma machine file.
 		// The layout of the machine is:
 		// 		rotor, rotor, permutator, rotor, rotor, permutator, rotor, rotor
-		var rotor1, rotor2, rotor3, rotor4, rotor5, rotor6 *Rotor
-		var permutator1, permutator2 *Permutator
-		newMachine[0] = rotor1
-		newMachine[0] = rotor2
-		newMachine[0] = permutator1
-		newMachine[0] = rotor3
-		newMachine[0] = rotor4
-		newMachine[0] = permutator2
-		newMachine[0] = rotor5
-		newMachine[0] = rotor6
+		newMachine[0] = new(Rotor)
+		newMachine[1] = new(Rotor)
+		newMachine[2] = new(Permutator)
+		newMachine[3] = new(Rotor)
+		newMachine[4] = new(Rotor)
+		newMachine[5] = new(Permutator)
+		newMachine[6] = new(Rotor)
+		newMachine[7] = new(Rotor)
 
 		for _, machine := range newMachine {
 			switch v := machine.(type) {

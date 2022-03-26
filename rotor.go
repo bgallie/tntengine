@@ -13,11 +13,11 @@ import (
 
 // Rotor - the type of the TNT2 rotor
 type Rotor struct {
-	Size    int
-	Start   int
-	Step    int
-	Current int
-	Rotor   []byte
+	Size    int    // the size in bits for this rotor
+	Start   int    // the initial starting position of the rotor
+	Step    int    // the step size in bits for this rotor
+	Current int    // the current position of this rotor
+	Rotor   []byte // the rotor
 }
 
 // New - creates a new Rotor with the given size, start, step and rotor data.
@@ -30,27 +30,27 @@ func (r *Rotor) New(size, start, step int, rotor []byte) *Rotor {
 	return r
 }
 
-// Update - updates the given Rotor with a new size, start and step.
+// Update - updates the given Rotor with a new size, start, step and (psudo)
+//		  - random rotor data.
 func (r *Rotor) Update(random *Rand) {
 	// Get size, start and step of the new rotor
 	rotorSize := RotorSizes[rotorSizes[rotorSizesIndex]]
 	rotorSizesIndex = (rotorSizesIndex + 1) % len(RotorSizes)
 	start := random.Intn(rotorSize)
-	step := random.Intn(rotorSize)
-	// blkCnt is the total number of bytes needed to hold rotorSize bits + a slice of 256 bits
-	blkCnt := (((rotorSize + CypherBlockSize + 7) / 8) + 31) / 32
+	step := random.Intn(rotorSize) + 1
+	// byteCnt is the total number of bytes needed to hold rotorSize bits + a slice of 256 bits
+	byteCnt := ((rotorSize + CypherBlockSize + 7) / 8)
 	// blkBytes is the number of bytes rotor r needs to increase to hold the new rotor.
-	blkBytes := (blkCnt * 32) - len(r.Rotor)
+	blkBytes := byteCnt - len(r.Rotor)
 	// Adjust the size of r.Rotor to match the new rotor size.
 	adjRotor := make([]byte, blkBytes)
 	r.Rotor = append(r.Rotor, adjRotor...)
-	// Fill the rotor with random data using TNT2 encryption to generate the
+	// Fill the rotor with random data using tntengine Rand function to generate the
 	// random data to fill the rotor.
 	random.Read(r.Rotor)
 	r.Size = rotorSize
-	r.Current = r.Size
 	r.Step = step
-	r.Start = start
+	r.Start, r.Current = start, start
 	r.sliceRotor()
 }
 

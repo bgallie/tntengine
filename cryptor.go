@@ -2,7 +2,7 @@
 // See the UNLICENSE file for details.
 package tntengine
 
-// Define the Cryptor interface, constants, and variables used in tntengine
+// Define the Crypter interface, constants, and variables used in tntengine
 
 import (
 	"bytes"
@@ -10,21 +10,20 @@ import (
 	"math/big"
 )
 
-// Define constants needed for TNT2
+// Define constants needed for tntengine
 const (
 	BitsPerByte             int = 8
 	CypherBlockSize         int = 256 // bits
 	CypherBlockBytes        int = CypherBlockSize / BitsPerByte
-	MaximumRotorSize        int = 8192 // without the splice at the end.
 	NumberPermutationCycles int = 4
-	RotorSizeBytes          int = MaximumRotorSize / BitsPerByte
 )
 
 var (
 	// RotorSizes is an array of possible rotor sizes.  It consists of prime
-	// numbers less than 7936 to allow for 256 bit splce at the end of the rotor.
-	// The rotor sizes selected from this list will maximizes the number of
-	// unique states the rotors can take.
+	// numbers less than 8192 to ensure that the rotor sizes are realitivly prime.
+	// The rotor sizes selected from this list will maximizes the number of unique
+	// states the rotors can take.  The number of unique states range from
+	// 183,599,058,301,611,293,854,881 to 297,245,983,088,018,794,170,091
 	RotorSizes = [...]int{
 		7507, 7517, 7523, 7529, 7537, 7541, 7547, 7549, 7559, 7561,
 		7573, 7577, 7583, 7589, 7591, 7603, 7607, 7621, 7639, 7643,
@@ -44,14 +43,14 @@ var (
 	//          the number of unique states the permutation can be in for the
 	//          given cycles).
 	CycleSizes = [...][NumberPermutationCycles]int{
-		{61, 63, 65, 67}, // Number of unique states: 16,736,265 [401,670,360]
-		{53, 65, 67, 71}, // Number of unique states: 16,387,685 [393,304,440]
-		{55, 57, 71, 73}, // Number of unique states: 16,248,705 [389,968,920]
-		{53, 61, 63, 79}, // Number of unique states: 16,090,641 [386,175,384]
-		{43, 57, 73, 83}, // Number of unique states: 14,850,609 [356,414,616]
-		{49, 51, 73, 83}, // Number of unique states: 15,141,441 [363,394,584]
-		{47, 53, 73, 83}, // Number of unique states: 15,092,969 [362,231,256]
-		{47, 53, 71, 85}} // Number of unique states: 15,033,185 [360,796,440]
+		{61, 63, 65, 67}, // Number of unique states: 16,736,265
+		{53, 65, 67, 71}, // Number of unique states: 16,387,685
+		{55, 57, 71, 73}, // Number of unique states: 16,248,705
+		{53, 61, 63, 79}, // Number of unique states: 16,090,641
+		{43, 57, 73, 83}, // Number of unique states: 14,850,609
+		{49, 51, 73, 83}, // Number of unique states: 15,141,441
+		{47, 53, 73, 83}, // Number of unique states: 15,092,969
+		{47, 53, 71, 85}} // Number of unique states: 15,033,185
 
 	// CyclePermutations is an array of possible orderings that a particular
 	// set of four (4) cycle sizes can take.  This is used to increase the number
@@ -222,23 +221,7 @@ type CypherBlock struct {
 	CypherBlock [CypherBlockBytes]byte
 }
 
-// Marshall converts a CypherBlock into a slice of bytes
-func (cblk *CypherBlock) Marshall() []byte {
-	b := make([]byte, 0)
-	b = append(b, byte(cblk.Length))
-	b = append(b, cblk.CypherBlock[:]...)
-	return b
-}
-
-// Unmarshall converts a slice of bytes (created by Marshall) into a CypherBlock
-func (cblk *CypherBlock) Unmarshall(b []byte) *CypherBlock {
-	blk := new(CypherBlock)
-	blk.Length = int8(b[0])
-	_ = copy(blk.CypherBlock[:], b[1:])
-	return blk
-}
-
-// String formats a string representing the CypherBlock (as Go source code).
+// String formats a string representing the CypherBlock.
 func (cblk *CypherBlock) String() string {
 	var output bytes.Buffer
 	output.WriteString("CypherBlock: ")
@@ -257,7 +240,7 @@ type Crypter interface {
 	ApplyG(*[CypherBlockBytes]byte) *[CypherBlockBytes]byte
 }
 
-// Counter is a cryptor that does not encrypt/decrypt any data but counts the
+// Counter is a crypter that does not encrypt/decrypt any data but counts the
 // number of blocks that were encrypted.
 type Counter struct {
 	index *big.Int
@@ -283,7 +266,7 @@ func (cntr *Counter) ApplyF(blk *[CypherBlockBytes]byte) *[CypherBlockBytes]byte
 	return blk
 }
 
-// ApplyG - this function does nothing during decryption.
+// ApplyG - this function does nothing for a Counter during decryption.
 func (cntr *Counter) ApplyG(blk *[CypherBlockBytes]byte) *[CypherBlockBytes]byte {
 	return blk
 }
@@ -351,7 +334,10 @@ func DecryptMachine(ecm Crypter, left chan CypherBlock) chan CypherBlock {
 	return right
 }
 
-// CreateEncryptMachine -
+// CreateEncryptMachine - Chain the encryption machines together, using channels to pass
+//						  the data to be encrypted to the individual encryption machines.
+//						  The data is entered in the 'left' channel and the encrypted data
+//						  is read from the 'right' channel.
 func createEncryptMachine(ecms ...Crypter) (left chan CypherBlock, right chan CypherBlock) {
 	if ecms != nil {
 		idx := 0
@@ -366,7 +352,10 @@ func createEncryptMachine(ecms ...Crypter) (left chan CypherBlock, right chan Cy
 	return
 }
 
-// CreateDecryptMachine -
+// CreateDecryptMachine - Chain the decryption machines together (in reverse order), using
+//						  channels to pass the data to be decrypted to the individual
+//						  decryption machines.  The encrypted data is entered in the 'left'
+//						  channel and the plaintext data is read from the 'right' channel.
 func createDecryptMachine(ecms ...Crypter) (left chan CypherBlock, right chan CypherBlock) {
 	if ecms != nil {
 		idx := len(ecms) - 1

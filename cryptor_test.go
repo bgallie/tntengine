@@ -11,59 +11,6 @@ import (
 	"testing"
 )
 
-func TestCypherBlock_Marshall(t *testing.T) {
-	tests := []struct {
-		name string
-		cblk *CypherBlock
-		want []byte
-	}{
-		{
-			name: "tcbm1",
-			cblk: &CypherBlock{
-				Length:      32,
-				CypherBlock: [...]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 21, 32},
-			},
-			want: []byte{32, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 21, 32},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.cblk.Marshall(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("CypherBlock.Marshall() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestCypherBlock_Unmarshall(t *testing.T) {
-	type args struct {
-		b []byte
-	}
-	tests := []struct {
-		name string
-		cblk *CypherBlock
-		args args
-		want *CypherBlock
-	}{
-		{
-			name: "tcbu1",
-			cblk: new(CypherBlock),
-			args: args{b: []byte{32, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 21, 32}},
-			want: &CypherBlock{
-				Length:      32,
-				CypherBlock: [...]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 21, 32},
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.cblk.Unmarshall(tt.args.b); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("CypherBlock.Unmarshall() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestCypherBlock_String(t *testing.T) {
 	tests := []struct {
 		name string

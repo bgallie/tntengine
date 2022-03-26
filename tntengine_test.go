@@ -76,13 +76,13 @@ func TestTntEngine_CounterKey(t *testing.T) {
 			name:             "ttec1",
 			key:              "SecretKey",
 			proFormaFileName: "",
-			want:             "e922e73a0f662987531e0950e7f8f11093f6b7a8bb043306b1feb723b19ef61b",
+			want:             "ab2677fa2eecca36541ea85fd8d871203383b898bb025b8ec8fd5f24719eee1c",
 		},
 		{
 			name:             "ttec2",
 			key:              "SecretKey",
 			proFormaFileName: "test.proforma.json",
-			want:             "0c9eba881bf288ccbbb4001229b7700fcbc90ec5ef08613946c4b629c111194d",
+			want:             "9d468a888bf287c0cdc3008569b76c0cb7091b062f0b6209461436534392f95c",
 		},
 	}
 	for _, tt := range tests {
@@ -215,7 +215,7 @@ func TestTntEngine_EngineType(t *testing.T) {
 func TestTntEngine_MaximalStates(t *testing.T) {
 	var tntMachine TntEngine
 	tntMachine.Init([]byte("SecretKey"), "")
-	want, _ := new(big.Int).SetString("49757347268312618695711751903204439035", 10)
+	want, _ := new(big.Int).SetString("49101257188406090296051850365430624307", 10)
 	tests := []struct {
 		name string
 		want *big.Int
