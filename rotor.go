@@ -37,7 +37,7 @@ func (r *Rotor) Update(random *Rand) {
 	rotorSize := RotorSizes[rotorSizes[rotorSizesIndex]]
 	rotorSizesIndex = (rotorSizesIndex + 1) % len(RotorSizes)
 	start := random.Intn(rotorSize)
-	step := random.Intn(rotorSize) + 1
+	step := random.Intn(rotorSize-1) + 1
 	// byteCnt is the total number of bytes needed to hold rotorSize bits + a slice of 256 bits
 	byteCnt := ((rotorSize + CypherBlockSize + 7) / 8)
 	// blkBytes is the number of bytes rotor r needs to increase to hold the new rotor.
