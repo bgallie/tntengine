@@ -1,5 +1,5 @@
 // This is free and unencumbered software released into the public domain.
-// See the UNLICENSE file for details.
+// See the UNLICENSE file for the details.
 
 package tntengine
 
