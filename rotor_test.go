@@ -164,13 +164,13 @@ func TestRotor_ApplyF(t *testing.T) {
 		Rotor   []byte
 	}
 	type args struct {
-		blk *[CypherBlockBytes]byte
+		blk *[CipherBlockBytes]byte
 	}
 	tests := []struct {
 		name   string
 		fields fields
 		args   args
-		want   *[CypherBlockBytes]byte
+		want   *[CipherBlockBytes]byte
 	}{
 		// TODO: Add test cases.
 	}
@@ -199,13 +199,13 @@ func TestRotor_ApplyG(t *testing.T) {
 		Rotor   []byte
 	}
 	type args struct {
-		blk *[CypherBlockBytes]byte
+		blk *[CipherBlockBytes]byte
 	}
 	tests := []struct {
 		name   string
 		fields fields
 		args   args
-		want   *[CypherBlockBytes]byte
+		want   *[CipherBlockBytes]byte
 	}{
 		// TODO: Add test cases.
 	}

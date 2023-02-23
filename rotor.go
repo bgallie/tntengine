@@ -30,25 +30,16 @@ func (r *Rotor) New(size, start, step int, rotor []byte) *Rotor {
 	return r
 }
 
-// Update - updates the given Rotor with a new size, start, step and (psudo)
-//		  - random rotor data.
+// Update - updates the given Rotor with a new start, step and (psudo)
+//   - random rotor data.
 func (r *Rotor) Update(random *Rand) {
-	// Get size, start and step of the new rotor
-	rotorSize := RotorSizes[rotorSizes[rotorSizesIndex]]
-	rotorSizesIndex = (rotorSizesIndex + 1) % len(RotorSizes)
+	// Get start and step of the new rotor
+	rotorSize := r.Size
 	start := random.Intn(rotorSize)
 	step := random.Intn(rotorSize-1) + 1
-	// byteCnt is the total number of bytes needed to hold rotorSize bits + a slice of 256 bits
-	byteCnt := ((rotorSize + CypherBlockSize + 7) / 8)
-	// blkBytes is the number of bytes rotor r needs to increase to hold the new rotor.
-	blkBytes := byteCnt - len(r.Rotor)
-	// Adjust the size of r.Rotor to match the new rotor size.
-	adjRotor := make([]byte, blkBytes)
-	r.Rotor = append(r.Rotor, adjRotor...)
 	// Fill the rotor with random data using tntengine Rand function to generate the
 	// random data to fill the rotor.
 	random.Read(r.Rotor)
-	r.Size = rotorSize
 	r.Step = step
 	r.Start, r.Current = start, start
 	r.sliceRotor()
@@ -90,13 +81,13 @@ func (r *Rotor) Index() *big.Int {
 }
 
 // ApplyF - encrypts the given block of data.
-func (r *Rotor) ApplyF(blk *[CypherBlockBytes]byte) *[CypherBlockBytes]byte {
-	var res [CypherBlockBytes]byte
+func (r *Rotor) ApplyF(blk *[CipherBlockBytes]byte) *[CipherBlockBytes]byte {
+	var res [CipherBlockBytes]byte
 	ress := res[:]
 	rotor := r.Rotor
 	idx := r.Current
 
-	for cnt := 0; cnt < CypherBlockSize; cnt++ {
+	for cnt := 0; cnt < CipherBlockSize; cnt++ {
 		if GetBit(rotor, uint(idx)) {
 			SetBit(ress, uint(cnt))
 		}
@@ -109,13 +100,13 @@ func (r *Rotor) ApplyF(blk *[CypherBlockBytes]byte) *[CypherBlockBytes]byte {
 }
 
 // ApplyG - decrypts the given block of data
-func (r *Rotor) ApplyG(blk *[CypherBlockBytes]byte) *[CypherBlockBytes]byte {
-	var res [CypherBlockBytes]byte
+func (r *Rotor) ApplyG(blk *[CipherBlockBytes]byte) *[CipherBlockBytes]byte {
+	var res [CipherBlockBytes]byte
 	ress := res[:]
 	rotor := r.Rotor[:]
 	idx := r.Current
 
-	for cnt := 0; cnt < CypherBlockSize; cnt++ {
+	for cnt := 0; cnt < CipherBlockSize; cnt++ {
 		if GetBit(rotor, uint(idx)) {
 			SetBit(ress, uint(cnt))
 		}
@@ -131,7 +122,7 @@ func (r *Rotor) ApplyG(blk *[CypherBlockBytes]byte) *[CypherBlockBytes]byte {
 func (r *Rotor) String() string {
 	var output bytes.Buffer
 	rotorLen := len(r.Rotor)
-	output.WriteString(fmt.Sprintf("rotor.New(%d, %d, %d, []byte{\n",
+	output.WriteString(fmt.Sprintf("new(Rotor).New(%d, %d, %d, []byte{\n",
 		r.Size, r.Start, r.Step))
 	for i := 0; i < rotorLen; i += 16 {
 		output.WriteString("\t")

@@ -26,7 +26,7 @@ type Permutator struct {
 	MaximalStates int                   // Maximum number of cycles this permutator can have before repeating.
 	Cycles        []Cycle               // Cycles ordered by the current permutation.
 	Randp         []byte                // Values 0 - 255 in a random order.
-	bitPerm       [CypherBlockSize]byte // Permutation table created from Randp.
+	bitPerm       [CipherBlockSize]byte // Permutation table created from Randp.
 }
 
 // New creates a permutator and initializes it
@@ -60,17 +60,13 @@ func (p *Permutator) New(cycleSizes []int, randp []byte) *Permutator {
 // using the proForma rotors and permutators.
 func (p *Permutator) Update(random *Rand) {
 	// Create a table of byte values [0...255] in a random order
-	for i, val := range random.Perm(CypherBlockSize) {
+	for i, val := range random.Perm(CipherBlockSize) {
 		p.Randp[i] = byte(val)
 	}
 	// Chose a size of the cycles to use and randomize order of the values
-	length := len(CycleSizes[cycleSizesIndex])
+	length := 1
 	cycles := make([]int, length)
-	randi := random.Perm(length)
-	for idx, val := range randi {
-		cycles[idx] = CycleSizes[cycleSizes[cycleSizesIndex]][val]
-	}
-	cycleSizesIndex = (cycleSizesIndex + 1) % len(CycleSizes)
+	cycles[0] = 256
 	// update p.Cycles based on the new cycle sizes
 	for i := range cycles {
 		p.Cycles[i].Length = cycles[i]
@@ -141,8 +137,8 @@ func (p *Permutator) Index() *big.Int {
 }
 
 // ApplyF performs forward permutation on the 32 byte block of data.
-func (p *Permutator) ApplyF(blk *[CypherBlockBytes]byte) *[CypherBlockBytes]byte {
-	var res [CypherBlockBytes]byte
+func (p *Permutator) ApplyF(blk *[CipherBlockBytes]byte) *[CipherBlockBytes]byte {
+	var res [CipherBlockBytes]byte
 	blks := blk[:]
 	ress := res[:]
 	for i, v := range p.bitPerm {
@@ -156,8 +152,8 @@ func (p *Permutator) ApplyF(blk *[CypherBlockBytes]byte) *[CypherBlockBytes]byte
 }
 
 // ApplyG performs the reverse permutation on the 32 byte block of data.
-func (p *Permutator) ApplyG(blk *[CypherBlockBytes]byte) *[CypherBlockBytes]byte {
-	var res [CypherBlockBytes]byte
+func (p *Permutator) ApplyG(blk *[CipherBlockBytes]byte) *[CipherBlockBytes]byte {
+	var res [CipherBlockBytes]byte
 	blks := blk[:]
 	ress := res[:]
 	for i, v := range p.bitPerm {
@@ -173,14 +169,14 @@ func (p *Permutator) ApplyG(blk *[CypherBlockBytes]byte) *[CypherBlockBytes]byte
 // String formats a string representing the permutator (as Go source code).
 func (p *Permutator) String() string {
 	var output bytes.Buffer
-	output.WriteString("permutator.New([]int{")
+	output.WriteString("new(Permutator).New([]int{")
 	for _, v := range p.Cycles[0 : NumberPermutationCycles-1] {
 		output.WriteString(fmt.Sprintf("%d, ", v.Length))
 	}
 	output.WriteString(fmt.Sprintf("%d}, []byte{\n", p.Cycles[NumberPermutationCycles-1].Length))
-	for i := 0; i < CypherBlockSize; i += 16 {
+	for i := 0; i < CipherBlockSize; i += 16 {
 		output.WriteString("\t")
-		if i != (CypherBlockSize - 16) {
+		if i != (CipherBlockSize - 16) {
 			for _, k := range p.Randp[i : i+16] {
 				output.WriteString(fmt.Sprintf("%d, ", k))
 			}

@@ -4,7 +4,6 @@
 package tntengine
 
 import (
-	"io"
 	"math/big"
 	"reflect"
 	"testing"
@@ -12,12 +11,12 @@ import (
 
 func TestTntEngine_Left(t *testing.T) {
 	var tntMachine TntEngine
-	tntMachine.Init([]byte("SecretKey"), "")
+	tntMachine.Init([]byte("SecretKey"))
 	tntMachine.SetEngineType("E")
 	tntMachine.BuildCipherMachine()
 	tests := []struct {
 		name string
-		want chan CypherBlock
+		want chan CipherBlock
 	}{
 		{
 			name: "ttel1",
@@ -32,19 +31,19 @@ func TestTntEngine_Left(t *testing.T) {
 			}
 		})
 	}
-	var blk CypherBlock
+	var blk CipherBlock
 	tntMachine.left <- blk
 	<-tntMachine.right
 }
 
 func TestTntEngine_Right(t *testing.T) {
 	var tntMachine TntEngine
-	tntMachine.Init([]byte("SecretKey"), "")
+	tntMachine.Init([]byte("SecretKey"))
 	tntMachine.SetEngineType("E")
 	tntMachine.BuildCipherMachine()
 	tests := []struct {
 		name string
-		want chan CypherBlock
+		want chan CipherBlock
 	}{
 		{
 			name: "tter1",
@@ -59,7 +58,7 @@ func TestTntEngine_Right(t *testing.T) {
 			}
 		})
 	}
-	var blk CypherBlock
+	var blk CipherBlock
 	tntMachine.left <- blk
 	<-tntMachine.right
 }
@@ -67,27 +66,19 @@ func TestTntEngine_Right(t *testing.T) {
 func TestTntEngine_CounterKey(t *testing.T) {
 	var tntMachine TntEngine
 	tests := []struct {
-		name             string
-		key              string
-		proFormaFileName string
-		want             string
+		name string
+		key  string
+		want string
 	}{
 		{
-			name:             "ttec1",
-			key:              "SecretKey",
-			proFormaFileName: "",
-			want:             "ab2677fa2eecca36541ea85fd8d871203383b898bb025b8ec8fd5f24719eee1c",
-		},
-		{
-			name:             "ttec2",
-			key:              "SecretKey",
-			proFormaFileName: "test.proforma.json",
-			want:             "9d468a888bf287c0cdc3008569b76c0cb7091b062f0b6209461436534392f95c",
+			name: "ttec1",
+			key:  "SecretKey",
+			want: "30a7c225e88daa83416dee1970dc58b81f0c3771d6eb801ce23b49439357cc16",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tntMachine.Init([]byte(tt.key), tt.proFormaFileName)
+			tntMachine.Init([]byte(tt.key))
 			if got := tntMachine.CounterKey(); got != tt.want {
 				t.Errorf("TntEngine.CounterKey() = %v, want %v", got, tt.want)
 			}
@@ -97,7 +88,7 @@ func TestTntEngine_CounterKey(t *testing.T) {
 
 func TestTntEngine_Index(t *testing.T) {
 	var tntMachine TntEngine
-	tntMachine.Init([]byte("SecretKey"), "")
+	tntMachine.Init([]byte("SecretKey"))
 	iCnt, _ := new(big.Int).SetString("1234567890", 10)
 	tntMachine.SetIndex(iCnt)
 	tests := []struct {
@@ -121,7 +112,7 @@ func TestTntEngine_Index(t *testing.T) {
 
 func TestTntEngine_SetIndex(t *testing.T) {
 	var tntMachine TntEngine
-	tntMachine.Init([]byte("SecretKey"), "")
+	tntMachine.Init([]byte("SecretKey"))
 	iCnt, _ := new(big.Int).SetString("1234567890", 10)
 	type args struct {
 		iCnt *big.Int
@@ -150,7 +141,7 @@ func TestTntEngine_SetIndex(t *testing.T) {
 
 func TestTntEngine_SetEngineType(t *testing.T) {
 	var tntMachine TntEngine
-	tntMachine.Init([]byte("SecretKey"), "")
+	tntMachine.Init([]byte("SecretKey"))
 	type args struct {
 		engineType string
 	}
@@ -176,7 +167,7 @@ func TestTntEngine_SetEngineType(t *testing.T) {
 
 func TestTntEngine_Engine(t *testing.T) {
 	var tntMachine TntEngine
-	tntMachine.Init([]byte("SecretKey"), "")
+	tntMachine.Init([]byte("SecretKey"))
 	tests := []struct {
 		name string
 		want []Crypter
@@ -195,7 +186,7 @@ func TestTntEngine_Engine(t *testing.T) {
 
 func TestTntEngine_EngineType(t *testing.T) {
 	var tntMachine TntEngine
-	tntMachine.Init([]byte("SecretKey"), "")
+	tntMachine.Init([]byte("SecretKey"))
 	tests := []struct {
 		name string
 		want string
@@ -214,8 +205,8 @@ func TestTntEngine_EngineType(t *testing.T) {
 
 func TestTntEngine_MaximalStates(t *testing.T) {
 	var tntMachine TntEngine
-	tntMachine.Init([]byte("SecretKey"), "")
-	want, _ := new(big.Int).SetString("49101257188406090296051850365430624307", 10)
+	tntMachine.Init([]byte("SecretKey"))
+	want, _ := new(big.Int).SetString("2046922266175282266177536", 10)
 	tests := []struct {
 		name string
 		want *big.Int
@@ -237,10 +228,9 @@ func TestTntEngine_MaximalStates(t *testing.T) {
 
 func TestTntEngine_Init(t *testing.T) {
 	var tntMachine TntEngine
-	tntMachine.Init([]byte("SecretKey"), "")
+	tntMachine.Init([]byte("SecretKey"))
 	type args struct {
-		secret           []byte
-		proFormaFileName string
+		secret []byte
 	}
 	tests := []struct {
 		name string
@@ -251,14 +241,14 @@ func TestTntEngine_Init(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			e := tntMachine
-			e.Init(tt.args.secret, tt.args.proFormaFileName)
+			e.Init(tt.args.secret)
 		})
 	}
 }
 
 func TestTntEngine_BuildCipherMachine(t *testing.T) {
 	var tntMachine TntEngine
-	tntMachine.Init([]byte("SecretKey"), "")
+	tntMachine.Init([]byte("SecretKey"))
 	tests := []struct {
 		name string
 	}{
@@ -273,23 +263,18 @@ func TestTntEngine_BuildCipherMachine(t *testing.T) {
 }
 
 func Test_createProFormaMachine(t *testing.T) {
-	type args struct {
-		pfmReader io.Reader
-	}
 	tests := []struct {
 		name string
-		args args
 		want *[]Crypter
 	}{
 		{
 			name: "tcpfm1",
-			args: args{pfmReader: nil},
-			want: &[]Crypter{Rotor1, Rotor2, Permutator1, Rotor3, Rotor4, Permutator2, Rotor5, Rotor6},
+			want: &[]Crypter{Rotor1, Rotor2, Permutator1, Rotor3, Rotor4, Permutator1, Rotor5, Rotor6},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := createProFormaMachine(tt.args.pfmReader); !reflect.DeepEqual(got, tt.want) {
+			if got := createProFormaMachine(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("createProFormaMachine() = %v, want %v", got, tt.want)
 			}
 		})

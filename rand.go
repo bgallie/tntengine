@@ -13,25 +13,22 @@ import (
 	"reflect"
 )
 
-var emptyBlk CypherBlock
+var emptyBlk CipherBlock
 
 type Rand struct {
 	tntMachine *TntEngine
 	idx        int
-	blk        CypherBlock
+	blk        CipherBlock
 }
 
 func NewRand(src *TntEngine) *Rand {
-	rand := new(Rand)
-	rand.tntMachine = src
-	rand.idx = CypherBlockBytes
 	fmt.Fprintln(os.Stderr, "WARNING: rand.NewRand() is deprecated.  Use Rand.New() instead")
-	return rand
+	return new(Rand).New(src)
 }
 
 func (rnd *Rand) New(src *TntEngine) *Rand {
 	rnd.tntMachine = src
-	rnd.idx = CypherBlockBytes
+	rnd.idx = CipherBlockBytes
 	return rnd
 }
 
@@ -99,25 +96,25 @@ func (rnd *Rand) Read(p []byte) (n int, err error) {
 	if reflect.DeepEqual(rnd.blk, emptyBlk) {
 		cntrKeyBytes, _ := hex.DecodeString(rnd.tntMachine.cntrKey)
 		cntrKeyBytes = jc1Key.XORKeyStream(cntrKeyBytes)
-		rnd.blk.Length = int8(CypherBlockBytes)
-		_ = copy(rnd.blk.CypherBlock[:], cntrKeyBytes)
+		rnd.blk.Length = int8(CipherBlockBytes)
+		_ = copy(rnd.blk.CipherBlock[:], cntrKeyBytes)
 	}
 	p = p[:0]
 	left := rnd.tntMachine.Left()
 	right := rnd.tntMachine.Right()
 	for {
-		if rnd.idx >= CypherBlockBytes {
+		if rnd.idx >= CipherBlockBytes {
 			left <- rnd.blk
 			rnd.blk = <-right
 			rnd.idx = 0
 		}
-		leftInBlk := len(rnd.blk.CypherBlock) - rnd.idx
+		leftInBlk := len(rnd.blk.CipherBlock) - rnd.idx
 		remaining := cap(p) - len(p)
 		if remaining >= leftInBlk {
-			p = append(p, rnd.blk.CypherBlock[rnd.idx:]...)
+			p = append(p, rnd.blk.CipherBlock[rnd.idx:]...)
 			rnd.idx += leftInBlk
 		} else {
-			p = append(p, rnd.blk.CypherBlock[rnd.idx:rnd.idx+remaining]...)
+			p = append(p, rnd.blk.CipherBlock[rnd.idx:rnd.idx+remaining]...)
 			rnd.idx += remaining
 			break
 		}

@@ -6,11 +6,8 @@ package tntengine
 // Define the tntengine type and it's methods
 
 import (
-	"bufio"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"math/big"
 	"os"
@@ -21,12 +18,8 @@ import (
 )
 
 var (
-	counter         *Counter = new(Counter)
-	rotorSizes      []int
-	rotorSizesIndex int
-	cycleSizes      []int
-	cycleSizesIndex int
-	jc1Key          *jc1.UberJc1
+	counter *Counter = new(Counter)
+	jc1Key  *jc1.UberJc1
 )
 
 // TntEngine type defines the encryption/decryption machine (rotors and
@@ -34,18 +27,18 @@ var (
 type TntEngine struct {
 	engineType    string // "E)ncrypt" or "D)ecrypt"
 	engine        []Crypter
-	left, right   chan CypherBlock
+	left, right   chan CipherBlock
 	cntrKey       string
 	maximalStates *big.Int
 }
 
 // Left is a getter that returns the input channel for the TntEngine.
-func (e *TntEngine) Left() chan CypherBlock {
+func (e *TntEngine) Left() chan CipherBlock {
 	return e.left
 }
 
 // Right is a getter that returns the output channel for the TntEngine.
-func (e *TntEngine) Right() chan CypherBlock {
+func (e *TntEngine) Right() chan CipherBlock {
 	return e.right
 }
 
@@ -112,25 +105,18 @@ func (e *TntEngine) MaximalStates() *big.Int {
 // Init will initialize the TntEngine generating new Rotors and Permutators using
 // the proForma rotors and permutators in complex way, updating the rotors and
 // permutators in place.
-func (e *TntEngine) Init(secret []byte, proFormaFileName string) {
+func (e *TntEngine) Init(secret []byte) {
 	jc1Key = jc1.NewUberJc1(secret)
 	// Create an ecryption machine based on the proForma rotors and permutators.
-	var pfmReader io.Reader = nil
-	if len(proFormaFileName) != 0 {
-		in, err := os.Open(proFormaFileName)
-		checkFatal(err)
-		defer in.Close()
-		pfmReader = bufio.NewReader(in)
-	}
-	e.engine = *createProFormaMachine(pfmReader)
+	e.engine = *createProFormaMachine()
 	e.left, e.right = createEncryptMachine(e.engine...)
 	// Get a SHA-3 hash of the encryption key.  This is used as a key to store
 	// the count of blocks already encrypted to use as a starting point for the
 	// encryption of the next message.
 	k := make([]byte, 1024)
-	blk := *new(CypherBlock)
+	blk := *new(CipherBlock)
 	blk.Length = 32
-	h := blk.CypherBlock[:]
+	h := blk.CipherBlock[:]
 	d := sha3.NewShake256()
 	d.Write(jc1Key.XORKeyStream(k))
 	d.Read(h)
@@ -140,19 +126,11 @@ func (e *TntEngine) Init(secret []byte, proFormaFileName string) {
 	e.SetIndex(iCnt)
 	e.left <- blk
 	blk = <-e.right
-	e.cntrKey = hex.EncodeToString(blk.CypherBlock[:])
+	e.cntrKey = hex.EncodeToString(blk.CipherBlock[:])
 	e.SetIndex(BigZero)
 	// Create a random number function [func(max int) int] that uses psudo-
 	// random data generated the proforma encryption machine.
 	random := new(Rand).New(e)
-	// Create a permutaion of the rotor indices to allow picking the rotors in
-	// a random order based on the key.
-	rotorSizes = random.Perm(len(RotorSizes))
-	rotorSizesIndex = 0
-	// Create a permutaion of cycle sizes indices to allow picking the cycle
-	// sizes in a random order based on the key.
-	cycleSizes = random.Perm(len(CycleSizes))
-	cycleSizesIndex = 0
 	// Update the rotors and permutators in a very non-linear fashion.
 	e.maximalStates = new(big.Int).Set(BigOne)
 	for _, machine := range e.engine {
@@ -172,12 +150,9 @@ func (e *TntEngine) Init(secret []byte, proFormaFileName string) {
 	// Now that we have created the new rotors and permutators from the proform
 	// machine, populate the TntEngine with them.
 	newMachine := make([]Crypter, 9)
-	machineOrder := random.Perm(len(e.engine))
-	for idx, val := range machineOrder {
-		newMachine[idx] = e.engine[val]
-	}
+	cnt := copy(newMachine, e.engine)
 	counter.SetIndex(BigZero)
-	newMachine[len(newMachine)-1] = counter
+	newMachine[cnt] = counter
 	e.engine = newMachine
 }
 
@@ -196,11 +171,20 @@ func (e *TntEngine) BuildCipherMachine() {
 	}
 }
 
+// CloseCipherMachine will close down the cipher machine by exiting the go function
+// that performs the encryption/decryption using the individual rotors/permutators.
+// This is done by passing the CipherMachine a CypherBlock with a length of zero (0).
+func (e *TntEngine) CloseCipherMachine() {
+	blk := new(CipherBlock)
+	e.Left() <- *blk
+	<-e.Right()
+}
+
 // createProFormaMachine initializes the proForma machine used to create the
 // TNT2 encryption machine.  If the machineFileName is not empty then the
 // proForma machine is loaded from that file, else the hardcoded rotors and
 // permutators are used to initialize the proForma machine.
-func createProFormaMachine(pfmReader io.Reader) *[]Crypter {
+func createProFormaMachine() *[]Crypter {
 	newMachine := make([]Crypter, 8)
 	// getCyclesSizes will extract the lengths of the given permutation cycles
 	// and return them as a slice of ints.
@@ -211,58 +195,21 @@ func createProFormaMachine(pfmReader io.Reader) *[]Crypter {
 		}
 		return cycleSizes
 	}
-	if pfmReader == nil {
-		// Create the proforma encryption machine.  The layout of the machine is:
-		// 		rotor, rotor, permutator, rotor, rotor, permutator, rotor, rotor
-
-		// Create the ProFormaMachine by making a copy of the hardcoded proforma rotors and permutators.
-		// This resolves an issue running tests where TntEngine.Init() is called multiple times which
-		// caused a failure on the second call.
-		newMachine[0] = new(Rotor).New(Rotor1.Size, Rotor1.Start, Rotor1.Step, append([]byte(nil), Rotor1.Rotor...))
-		newMachine[1] = new(Rotor).New(Rotor2.Size, Rotor2.Start, Rotor2.Step, append([]byte(nil), Rotor2.Rotor...))
-		newMachine[2] = new(Permutator).New(getCycleSizes(Permutator1.Cycles), append([]byte(nil), Permutator1.Randp...))
-		newMachine[3] = new(Rotor).New(Rotor3.Size, Rotor3.Start, Rotor3.Step, append([]byte(nil), Rotor3.Rotor...))
-		newMachine[4] = new(Rotor).New(Rotor4.Size, Rotor4.Start, Rotor4.Step, append([]byte(nil), Rotor4.Rotor...))
-		newMachine[5] = new(Permutator).New(getCycleSizes(Permutator2.Cycles), append([]byte(nil), Permutator2.Randp...))
-		newMachine[6] = new(Rotor).New(Rotor5.Size, Rotor5.Start, Rotor5.Step, append([]byte(nil), Rotor5.Rotor...))
-		newMachine[7] = new(Rotor).New(Rotor6.Size, Rotor6.Start, Rotor6.Step, append([]byte(nil), Rotor6.Rotor...))
-	} else {
-		jDecoder := json.NewDecoder(pfmReader)
-		// Create the proforma encryption machine from the given proforma machine file.
-		// The layout of the machine is:
-		// 		rotor, rotor, permutator, rotor, rotor, permutator, rotor, rotor
-		newMachine[0] = new(Rotor)
-		newMachine[1] = new(Rotor)
-		newMachine[2] = new(Permutator)
-		newMachine[3] = new(Rotor)
-		newMachine[4] = new(Rotor)
-		newMachine[5] = new(Permutator)
-		newMachine[6] = new(Rotor)
-		newMachine[7] = new(Rotor)
-
-		for _, machine := range newMachine {
-			switch v := machine.(type) {
-			default:
-				fmt.Fprintf(os.Stderr, "Unknown machine: %v\n", v)
-			case *Rotor:
-				// r := new(Rotor)
-				err := jDecoder.Decode(&machine)
-				checkFatal(err)
-				// newMachine[cnt] = r
-			case *Permutator:
-				// p := new(Permutator)
-				err := jDecoder.Decode(&machine)
-				checkFatal(err)
-				// newMachine[cnt] = p
-			}
-		}
-	}
+	// Create the proforma encryption machine.  The layout of the machine is:
+	// 		rotor, rotor, permutator, rotor, rotor, permutator, rotor, rotor
+	// Note: The two permutators are identical which simulates the original code where the permutator
+	//		 is used twice before it is cycled to it's next state.
+	// Create the ProFormaMachine by making a copy of the hardcoded proforma rotors and permutators.
+	// This resolves an issue running tests where TntEngine.Init() is called multiple times which
+	// caused a failure on the second call.
+	newMachine[0] = new(Rotor).New(Rotor1.Size, Rotor1.Start, Rotor1.Step, append([]byte(nil), Rotor1.Rotor...))
+	newMachine[1] = new(Rotor).New(Rotor2.Size, Rotor2.Start, Rotor2.Step, append([]byte(nil), Rotor2.Rotor...))
+	newMachine[2] = new(Permutator).New(getCycleSizes(Permutator1.Cycles), append([]byte(nil), Permutator1.Randp...))
+	newMachine[3] = new(Rotor).New(Rotor3.Size, Rotor3.Start, Rotor3.Step, append([]byte(nil), Rotor3.Rotor...))
+	newMachine[4] = new(Rotor).New(Rotor4.Size, Rotor4.Start, Rotor4.Step, append([]byte(nil), Rotor4.Rotor...))
+	newMachine[5] = new(Permutator).New(getCycleSizes(Permutator1.Cycles), append([]byte(nil), Permutator1.Randp...))
+	newMachine[6] = new(Rotor).New(Rotor5.Size, Rotor5.Start, Rotor5.Step, append([]byte(nil), Rotor5.Rotor...))
+	newMachine[7] = new(Rotor).New(Rotor6.Size, Rotor6.Start, Rotor6.Step, append([]byte(nil), Rotor6.Rotor...))
 
 	return &newMachine
-}
-
-func checkFatal(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
 }
