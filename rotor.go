@@ -11,7 +11,7 @@ import (
 	"math/big"
 )
 
-// Rotor - the type of the TNT2 rotor
+// Rotor - the type of the TNT rotor
 type Rotor struct {
 	Size    int    // the size in bits for this rotor
 	Start   int    // the initial starting position of the rotor
@@ -25,7 +25,7 @@ func (r *Rotor) New(size, start, step int, rotor []byte) *Rotor {
 	r.Start, r.Current = start, start
 	r.Size = size
 	r.Step = step
-	r.Rotor = rotor
+	r.Rotor = append([]byte(nil), rotor...)
 	r.sliceRotor()
 	return r
 }
@@ -75,7 +75,7 @@ func (r *Rotor) SetIndex(idx *big.Int) {
 	}
 }
 
-// Index - Rotor does no track the index.
+// Index - Rotor does not track the index.
 func (r *Rotor) Index() *big.Int {
 	return nil
 }
@@ -127,9 +127,10 @@ func (r *Rotor) String() string {
 	for i := 0; i < rotorLen; i += 16 {
 		output.WriteString("\t")
 		if i+16 < rotorLen {
-			for _, k := range r.Rotor[i : i+16] {
+			for _, k := range r.Rotor[i : i+15] {
 				output.WriteString(fmt.Sprintf("%d, ", k))
 			}
+			output.WriteString(fmt.Sprintf("%d,", r.Rotor[i+15]))
 		} else {
 			l := len(r.Rotor[i:])
 			for _, k := range r.Rotor[i : i+l-1] {
