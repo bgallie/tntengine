@@ -3,7 +3,7 @@ module github.com/bgallie/tntengine
 go 1.20
 
 require (
-	github.com/bgallie/jc1 v1.2.0
+	github.com/bgallie/jc1 v1.2.1
 	golang.org/x/crypto v0.10.0
 )
 
