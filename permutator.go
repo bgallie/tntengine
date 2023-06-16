@@ -105,32 +105,32 @@ func (p *Permutator) Index() *big.Int {
 }
 
 // ApplyF performs forward permutation on the 32 byte block of data.
-func (p *Permutator) ApplyF(blk *[CipherBlockBytes]byte) *[CipherBlockBytes]byte {
-	var res [CipherBlockBytes]byte
-	blks := blk[:]
-	ress := res[:]
-	for i, v := range p.bitPerm {
-		if GetBit(blks, uint(i)) {
-			SetBit(ress, uint(v))
+func (p *Permutator) ApplyF(blk CipherBlock) CipherBlock {
+	if len(blk) == CipherBlockBytes {
+		ress := make([]byte, CipherBlockBytes)
+		for i, v := range p.bitPerm {
+			if GetBit(blk, uint(i)) {
+				SetBit(ress, uint(v))
+			}
 		}
+		p.nextState()
+		blk = ress
 	}
-	p.nextState()
-	*blk = res
 	return blk
 }
 
 // ApplyG performs the reverse permutation on the 32 byte block of data.
-func (p *Permutator) ApplyG(blk *[CipherBlockBytes]byte) *[CipherBlockBytes]byte {
-	var res [CipherBlockBytes]byte
-	blks := blk[:]
-	ress := res[:]
-	for i, v := range p.bitPerm {
-		if GetBit(blks, uint(v)) {
-			SetBit(ress, uint(i))
+func (p *Permutator) ApplyG(blk CipherBlock) CipherBlock {
+	if len(blk) == CipherBlockBytes {
+		ress := make([]byte, CipherBlockBytes)
+		for i, v := range p.bitPerm {
+			if GetBit(blk, uint(v)) {
+				SetBit(ress, uint(i))
+			}
 		}
+		p.nextState()
+		blk = ress
 	}
-	p.nextState()
-	*blk = res
 	return blk
 }
 

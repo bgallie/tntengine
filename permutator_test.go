@@ -132,24 +132,35 @@ func TestPermutator_Index(t *testing.T) {
 
 func TestPermutator_ApplyF(t *testing.T) {
 	type args struct {
-		blk *[CipherBlockBytes]byte
+		blk CipherBlock
 	}
 	tests := []struct {
 		name string
 		args args
-		want *[CipherBlockBytes]byte
+		want CipherBlock
 	}{
 		{
 			name: "tpaf1",
 			args: args{
-				&[CipherBlockBytes]byte{
+				[]byte{
 					1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
 					17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,
 				},
 			},
-			want: &[CipherBlockBytes]byte{
+			want: []byte{
 				16, 66, 66, 102, 144, 89, 68, 25, 50, 40, 147, 34, 232, 163,
 				1, 16, 69, 35, 144, 64, 2, 2, 16, 175, 98, 54, 32, 113, 10, 44, 5, 35,
+			},
+		},
+		{ // A CipherBlock with less than 32 bytes will not have the permutation applied to it.
+			name: "tpaf2",
+			args: args{
+				[]byte{
+					1, 2, 3, 4, 5, 6,
+				},
+			},
+			want: []byte{
+				1, 2, 3, 4, 5, 6,
 			},
 		},
 	}
@@ -165,24 +176,35 @@ func TestPermutator_ApplyF(t *testing.T) {
 
 func TestPermutator_ApplyG(t *testing.T) {
 	type args struct {
-		blk *[CipherBlockBytes]byte
+		blk CipherBlock
 	}
 	tests := []struct {
 		name string
 		args args
-		want *[CipherBlockBytes]byte
+		want CipherBlock
 	}{
 		{
 			name: "tpafg1",
 			args: args{
-				&[CipherBlockBytes]byte{
+				[]byte{
 					16, 66, 66, 102, 144, 89, 68, 25, 50, 40, 147, 34, 232, 163,
 					1, 16, 69, 35, 144, 64, 2, 2, 16, 175, 98, 54, 32, 113, 10, 44, 5, 35,
 				},
 			},
-			want: &[CipherBlockBytes]byte{
+			want: []byte{
 				1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
 				17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,
+			},
+		},
+		{ // A CipherBlock with less than 32 bytes will not have the permutation applied to it.
+			name: "tpafg2",
+			args: args{
+				[]byte{
+					16, 66, 66, 102,
+				},
+			},
+			want: []byte{
+				16, 66, 66, 102,
 			},
 		},
 	}

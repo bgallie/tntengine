@@ -152,31 +152,31 @@ var (
 	BigOne = big.NewInt(1)
 )
 
-// CipherBlock is the data processed by the crypters (rotors and permutators).
-// It consistes of the length in bytes to process and the (32 bytes of) data to
-// process.
-type CipherBlock struct {
-	Length      int8
-	CipherBlock [CipherBlockBytes]byte
-}
+// // CipherBlock is the data processed by the crypters (rotors and permutators).
+// // It consistes of the length in bytes to process and the (32 bytes of) data to
+// // process.
+type CipherBlock []byte
 
 // String formats a string representing the CipherBlock.
-func (cblk *CipherBlock) String() string {
+func (cblk CipherBlock) String() string {
 	var output bytes.Buffer
-	output.WriteString("CipherBlock: ")
-	output.WriteString(fmt.Sprintf("\t     Length: %d\n", cblk.Length))
-	output.WriteString(fmt.Sprintf("\tCipherBlock:\t% X\n", cblk.CipherBlock[0:16]))
-	output.WriteString(fmt.Sprintf("\t\t\t% X", cblk.CipherBlock[16:]))
+	blk := make([]byte, CipherBlockBytes)
+	_ = copy(blk, cblk)
+	output.WriteString("CipherBlock:")
+	output.WriteString(fmt.Sprintf("\t     Length: %d\n", len(cblk)))
+	output.WriteString(fmt.Sprintf("            \t   Capacity: %d\n", cap(cblk)))
+	output.WriteString(fmt.Sprintf("            \t       Data:\t% X\n", blk[0:16]))
+	output.WriteString(fmt.Sprintf("            \t\t\t% X", blk[16:]))
 	return output.String()
 }
 
 // Crypter interface
 type Crypter interface {
-	Update(*Rand)                                           // function to update the rotor/permutator
-	SetIndex(*big.Int)                                      // setter for the index value
-	Index() *big.Int                                        // getter for the index value
-	ApplyF(*[CipherBlockBytes]byte) *[CipherBlockBytes]byte // encryption function
-	ApplyG(*[CipherBlockBytes]byte) *[CipherBlockBytes]byte // decryption function
+	Update(*Rand)                   // function to update the rotor/permutator
+	SetIndex(*big.Int)              // setter for the index value
+	Index() *big.Int                // getter for the index value
+	ApplyF(CipherBlock) CipherBlock // encryption function
+	ApplyG(CipherBlock) CipherBlock // decryption function
 }
 
 // Counter is a crypter that does not encrypt/decrypt any data but counts the
@@ -200,20 +200,24 @@ func (cntr *Counter) Index() *big.Int {
 }
 
 // ApplyF - increments the counter for each block that is encrypted.
-func (cntr *Counter) ApplyF(blk *[CipherBlockBytes]byte) *[CipherBlockBytes]byte {
+func (cntr *Counter) ApplyF(blk CipherBlock) CipherBlock {
 	cntr.index.Add(cntr.index, BigOne)
 	return blk
 }
 
 // ApplyG - this function does nothing for a Counter during decryption.
-func (cntr *Counter) ApplyG(blk *[CipherBlockBytes]byte) *[CipherBlockBytes]byte {
+func (cntr *Counter) ApplyG(blk CipherBlock) CipherBlock {
 	return blk
 }
 
+func (cntr *Counter) String() string {
+	return fmt.Sprint(cntr.index)
+}
+
 // SubBlock -  subtracts (not XOR) the key from the data to be decrypted
-func SubBlock(blk, key *[CipherBlockBytes]byte) *[CipherBlockBytes]byte {
+func SubBlock(blk, key CipherBlock) CipherBlock {
 	var p int
-	for idx, val := range *blk {
+	for idx, val := range blk {
 		p = p + int(val) - int(key[idx])
 		blk[idx] = byte(p & 0xFF)
 		p = p >> BitsPerByte
@@ -222,9 +226,9 @@ func SubBlock(blk, key *[CipherBlockBytes]byte) *[CipherBlockBytes]byte {
 }
 
 // AddBlock - adds (not XOR) the data to be encrypted with the key.
-func AddBlock(blk, key *[CipherBlockBytes]byte) *[CipherBlockBytes]byte {
+func AddBlock(blk, key CipherBlock) CipherBlock {
 	var p int
-	for i, v := range *blk {
+	for i, v := range blk {
 		p += int(v) + int(key[i])
 		blk[i] = byte(p & 0xFF)
 		p >>= BitsPerByte
@@ -243,12 +247,12 @@ func EncryptMachine(ecm Crypter, left chan CipherBlock) chan CipherBlock {
 		defer close(right)
 		for {
 			inp := <-left
-			if inp.Length <= 0 {
+			if len(inp) <= 0 {
 				right <- inp
 				ecm = nil
 				break
 			}
-			inp.CipherBlock = *ecm.ApplyF(&inp.CipherBlock)
+			inp = ecm.ApplyF(inp)
 			right <- inp
 		}
 	}(ecm, left, right)
@@ -263,12 +267,12 @@ func DecryptMachine(ecm Crypter, left chan CipherBlock) chan CipherBlock {
 		defer close(right)
 		for {
 			inp := <-left
-			if inp.Length <= 0 {
+			if len(inp) <= 0 {
 				right <- inp
 				ecm = nil
 				break
 			}
-			inp.CipherBlock = *ecm.ApplyG(&inp.CipherBlock)
+			inp = ecm.ApplyG(inp)
 			right <- inp
 		}
 	}(ecm, left, right)

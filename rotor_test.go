@@ -186,22 +186,22 @@ func TestRotor_Index(t *testing.T) {
 
 func TestRotor_ApplyF(t *testing.T) {
 	type args struct {
-		blk *[CipherBlockBytes]byte
+		blk CipherBlock
 	}
 	tests := []struct {
 		name string
 		args args
-		want *[CipherBlockBytes]byte
+		want CipherBlock
 	}{
 		{
 			name: "tpafg1",
 			args: args{
-				&[CipherBlockBytes]byte{
+				[]byte{
 					0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 					0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 				},
 			},
-			want: &[CipherBlockBytes]byte{
+			want: []byte{
 				63, 180, 255, 162, 59, 142, 61, 13, 187, 226, 49, 134, 163, 38, 44, 14,
 				255, 73, 155, 237, 208, 42, 217, 227, 194, 245, 229, 169, 96, 163, 33, 145,
 			},
@@ -220,22 +220,22 @@ func TestRotor_ApplyF(t *testing.T) {
 
 func TestRotor_ApplyG(t *testing.T) {
 	type args struct {
-		blk *[CipherBlockBytes]byte
+		blk CipherBlock
 	}
 	tests := []struct {
 		name string
 		args args
-		want *[CipherBlockBytes]byte
+		want CipherBlock
 	}{
 		{
 			name: "tpafg1",
 			args: args{
-				&[CipherBlockBytes]byte{
+				[]byte{
 					63, 180, 255, 162, 59, 142, 61, 13, 187, 226, 49, 134, 163, 38, 44, 14,
 					255, 73, 155, 237, 208, 42, 217, 227, 194, 245, 229, 169, 96, 163, 33, 145,
 				},
 			},
-			want: &[CipherBlockBytes]byte{
+			want: []byte{
 				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 			},

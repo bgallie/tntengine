@@ -14,22 +14,19 @@ import (
 func TestCypherBlock_String(t *testing.T) {
 	tests := []struct {
 		name string
-		cblk *CipherBlock
+		cblk CipherBlock
 		want string
 	}{
 		{
 			name: "tcbs1",
-			cblk: &CipherBlock{
-				Length:      32,
-				CipherBlock: [...]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 21, 32},
-			},
-			want: "CipherBlock: 	     Length: 32\n	CipherBlock:	01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F 10\n			11 12 13 14 15 16 17 18 19 1A 1B 1C 1D 1E 15 20",
+			cblk: []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 21, 32},
+			want: "CipherBlock:\t     Length: 32\n            \t   Capacity: 32\n            \t       Data:\t01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F 10\n            \t\t\t11 12 13 14 15 16 17 18 19 1A 1B 1C 1D 1E 15 20",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.cblk.String(); got != tt.want {
-				t.Errorf("CypherBlock.String() = %v, want %v", got, tt.want)
+				t.Errorf("CypherBlock.String() = \n%v, want \n%v", got, tt.want)
 			}
 		})
 	}
@@ -103,20 +100,20 @@ func TestCounter_ApplyF(t *testing.T) {
 	tntMachine.Init([]byte("SecretKey"))
 	tntMachine.SetIndex(BigZero)
 	type args struct {
-		blk *[CipherBlockBytes]byte
+		blk CipherBlock
 	}
 	tests := []struct {
 		name  string
 		cntr  Crypter
 		args  args
-		want  *[CipherBlockBytes]byte
+		want  CipherBlock
 		want2 *big.Int
 	}{
 		{
 			name:  "tcaf1",
 			cntr:  tntMachine.engine[len(tntMachine.engine)-1],
-			args:  args{new([CipherBlockBytes]byte)},
-			want:  new([CipherBlockBytes]byte),
+			args:  args{blk: *new(CipherBlock)},
+			want:  *new(CipherBlock),
 			want2: BigOne,
 		},
 	}
@@ -141,20 +138,20 @@ func TestCounter_ApplyG(t *testing.T) {
 	tntMachine.Init([]byte("SecretKey"))
 	tntMachine.SetIndex(BigZero)
 	type args struct {
-		blk *[CipherBlockBytes]byte
+		blk CipherBlock
 	}
 	tests := []struct {
 		name  string
 		cntr  Crypter
 		args  args
-		want  *[CipherBlockBytes]byte
+		want  CipherBlock
 		want2 *big.Int
 	}{
 		{
 			name:  "tcaf1",
 			cntr:  tntMachine.engine[len(tntMachine.engine)-1],
-			args:  args{new([CipherBlockBytes]byte)},
-			want:  new([CipherBlockBytes]byte),
+			args:  args{blk: *new(CipherBlock)},
+			want:  *new(CipherBlock),
 			want2: BigZero,
 		},
 	}
@@ -176,31 +173,31 @@ func TestCounter_ApplyG(t *testing.T) {
 
 func TestSubBlock(t *testing.T) {
 	type args struct {
-		blk *[CipherBlockBytes]byte
-		key *[CipherBlockBytes]byte
+		blk CipherBlock
+		key CipherBlock
 	}
 	tests := []struct {
 		name string
 		args args
-		want *[CipherBlockBytes]byte
+		want CipherBlock
 	}{
 		{
 			name: "tsb1",
 			args: args{
-				blk: &[...]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-				key: &[...]byte{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+				blk: []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+				key: []byte{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 			},
-			want: &[...]byte{
+			want: []byte{
 				0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
 				0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
 		},
 		{
 			name: "tsb2",
 			args: args{
-				blk: &[...]byte{0x59, 0xEF, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-				key: &[...]byte{0xC3, 0x0A, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+				blk: []byte{0x59, 0xEF, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+				key: []byte{0xC3, 0x0A, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 			},
-			want: &[...]byte{0x96, 0xE4, 0x2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			want: []byte{0x96, 0xE4, 0x2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		},
 	}
 	for _, tt := range tests {
@@ -214,31 +211,31 @@ func TestSubBlock(t *testing.T) {
 
 func TestAddBlock(t *testing.T) {
 	type args struct {
-		blk *[CipherBlockBytes]byte
-		key *[CipherBlockBytes]byte
+		blk CipherBlock
+		key CipherBlock
 	}
 	tests := []struct {
 		name string
 		args args
-		want *[CipherBlockBytes]byte
+		want CipherBlock
 	}{
 		{
 			name: "tab1",
 			args: args{
-				blk: &[...]byte{
+				blk: []byte{
 					0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
 					0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
-				key: &[...]byte{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+				key: []byte{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 			},
-			want: &[...]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			want: []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		},
 		{
 			name: "tab2",
 			args: args{
-				blk: &[...]byte{0x96, 0xE4, 0x2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-				key: &[...]byte{0xC3, 0x0A, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+				blk: []byte{0x96, 0xE4, 0x2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+				key: []byte{0xC3, 0x0A, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 			},
-			want: &[...]byte{0x59, 0xEF, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			want: []byte{0x59, 0xEF, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		},
 	}
 	for _, tt := range tests {

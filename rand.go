@@ -96,8 +96,8 @@ func (rnd *Rand) Read(p []byte) (n int, err error) {
 	if reflect.DeepEqual(rnd.blk, emptyBlk) {
 		cntrKeyBytes, _ := hex.DecodeString(rnd.tntMachine.cntrKey)
 		cntrKeyBytes = jc1Key.XORKeyStream(cntrKeyBytes)
-		rnd.blk.Length = int8(CipherBlockBytes)
-		_ = copy(rnd.blk.CipherBlock[:], cntrKeyBytes)
+		rnd.blk = make(CipherBlock, CipherBlockBytes)
+		_ = copy(rnd.blk[:], cntrKeyBytes)
 	}
 	p = p[:0]
 	left := rnd.tntMachine.Left()
@@ -108,13 +108,13 @@ func (rnd *Rand) Read(p []byte) (n int, err error) {
 			rnd.blk = <-right
 			rnd.idx = 0
 		}
-		leftInBlk := len(rnd.blk.CipherBlock) - rnd.idx
+		leftInBlk := len(rnd.blk) - rnd.idx
 		remaining := cap(p) - len(p)
 		if remaining >= leftInBlk {
-			p = append(p, rnd.blk.CipherBlock[rnd.idx:]...)
+			p = append(p, rnd.blk[rnd.idx:]...)
 			rnd.idx += leftInBlk
 		} else {
-			p = append(p, rnd.blk.CipherBlock[rnd.idx:rnd.idx+remaining]...)
+			p = append(p, rnd.blk[rnd.idx:rnd.idx+remaining]...)
 			rnd.idx += remaining
 			break
 		}

@@ -106,7 +106,7 @@ func (e *TntEngine) MaximalStates() *big.Int {
 // the proForma rotors and permutators in complex way, updating the rotors and
 // permutators in place.
 func (e *TntEngine) Init(secret []byte) {
-	jc1Key = jc1.NewUberJc1(secret)
+	jc1Key = new(jc1.UberJc1).New(secret)
 	// Create an ecryption machine based on the proForma rotors and permutators.
 	e.engine = *createProFormaMachine()
 	e.left, e.right = createEncryptMachine(e.engine...)
@@ -114,9 +114,8 @@ func (e *TntEngine) Init(secret []byte) {
 	// the count of blocks already encrypted to use as a starting point for the
 	// encryption of the next message.
 	k := make([]byte, 1024)
-	blk := *new(CipherBlock)
-	blk.Length = 32
-	h := blk.CipherBlock[:]
+	blk := make(CipherBlock, CipherBlockBytes)
+	h := blk[:]
 	d := sha3.NewShake256()
 	d.Write(jc1Key.XORKeyStream(k))
 	d.Read(h)
@@ -126,7 +125,7 @@ func (e *TntEngine) Init(secret []byte) {
 	e.SetIndex(iCnt)
 	e.left <- blk
 	blk = <-e.right
-	e.cntrKey = hex.EncodeToString(blk.CipherBlock[:])
+	e.cntrKey = hex.EncodeToString(blk[:])
 	e.SetIndex(BigZero)
 	// Create a random number function [func(max int) int] that uses psudo-
 	// random data generated the proforma encryption machine.
