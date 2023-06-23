@@ -11,6 +11,10 @@ import (
 	"sync"
 )
 
+const (
+	NumberPermutationCycles int = 1
+)
+
 // Cycle describes a cycle for the permutator so it can adjust the permutation
 // table used to permutate the block.  TNT currently uses a single cycle to
 // rearrange Randp into bitPerm
