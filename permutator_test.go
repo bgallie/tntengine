@@ -58,6 +58,7 @@ func TestPermutator_nextState(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p := new(Permutator).New(Permutator1.Cycle.Length, Permutator1.Randp)
+			p.nextState() // the first call does not cycles
 			p.nextState()
 			if p.bitPerm != tt.want {
 				t.Errorf("p.bitPerm = %v, want %v", p.bitPerm, tt.want)

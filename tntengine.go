@@ -18,6 +18,7 @@ import (
 )
 
 var (
+	engineLayout   = "rrprrprr" // 'r' is rotor, 'p' is permutator
 	proFormaRotors = []*Rotor{
 		// Define the proforma rotors used to create the actual rotors to use.
 		new(Rotor).New(1789, 1065, 1499, []byte{
@@ -262,7 +263,19 @@ func (e *TntEngine) Init(secret []byte) {
 	// Create a random number function [func(max int) int] that uses psudo-
 	// random data generated the proforma encryption machine.
 	random := new(Rand).New(e)
+	// get the number of rotors and permutators
+	rCnt, rIdx := 0, 0
+	pIdx, pCnt := 0, 0
+	for _, v := range engineLayout {
+		if v == 'r' {
+			rCnt++
+		} else if v == 'p' {
+			pCnt++
+		}
+	}
 	// Update the rotors and permutators in a very non-linear fashion.
+	rotors := make([]Crypter, rCnt)
+	permutators := make([]Crypter, pCnt)
 	e.maximalStates = new(big.Int).Set(BigOne)
 	for _, machine := range e.engine {
 		switch v := machine.(type) {
@@ -271,19 +284,36 @@ func (e *TntEngine) Init(secret []byte) {
 		case *Rotor:
 			machine.Update(random)
 			e.maximalStates = e.maximalStates.Mul(e.maximalStates, big.NewInt(int64(machine.(*Rotor).Size)))
+			rotors[rIdx] = machine
+			rIdx++
 		case *Permutator:
 			machine.Update(random)
 			e.maximalStates = e.maximalStates.Mul(e.maximalStates, big.NewInt(int64(machine.(*Permutator).MaximalStates)))
+			permutators[pIdx] = machine
+			pIdx++
 		case *Counter:
 			machine.SetIndex(BigZero)
 		}
 	}
 	// Now that we have created the new rotors and permutators from the proform
 	// machine, populate the TntEngine with them.
-	newMachine := make([]Crypter, 9)
-	cnt := copy(newMachine, e.engine)
+	newMachine := make([]Crypter, len(engineLayout)+1)
+	rotorOrder := random.Perm(rCnt)
+	// The original TNT program only used a single permutator twice befor cycing it.
+	// due to the cycleing a permutator after it's used, we use duplicate permutators.
+	permToUse := permutators[0]
+	rIdx = 0
+	for idx, val := range engineLayout {
+		if val == 'r' {
+			newMachine[idx] = rotors[rotorOrder[rIdx]]
+			rIdx++
+		} else if val == 'p' {
+			newMachine[idx] = permToUse
+		}
+	}
+	// cnt := copy(newMachine, e.engine)
 	counter.SetIndex(BigZero)
-	newMachine[cnt] = counter
+	newMachine[len(newMachine)-1] = counter
 	e.engine = newMachine
 }
 

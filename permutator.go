@@ -31,6 +31,7 @@ type Permutator struct {
 	Cycle         Cycle                 // Cycles ordered by the current permutation.
 	Randp         []byte                // Values 0 - 255 in a random order.
 	bitPerm       [CipherBlockSize]byte // Permutation table created from Randp.
+	needCycle     bool
 }
 
 // New creates a permutator and initializes it
@@ -44,6 +45,7 @@ func (p *Permutator) New(cycleSize int, randp []byte) *Permutator {
 	// Calculate the maximum number of states the permutator can take.
 	p.MaximalStates = p.Cycle.Length
 	p.cycle()
+	p.needCycle = false
 	return p
 }
 
@@ -65,13 +67,17 @@ func (p *Permutator) Update(random *Rand) {
 	p.MaximalStates = p.Cycle.Length
 	// Cycle the permutation table to it's starting state
 	p.cycle()
+	p.needCycle = false
 }
 
 // cycle bitPerm to it's next state.
 func (p *Permutator) nextState() {
-	p.Cycle.Current = (p.Cycle.Current + 1) % p.Cycle.Length
-	p.CurrentState = (p.CurrentState + 1) % p.MaximalStates
-	p.cycle()
+	if p.needCycle {
+		p.Cycle.Current = (p.Cycle.Current + 1) % p.Cycle.Length
+		p.CurrentState = (p.CurrentState + 1) % p.MaximalStates
+		p.cycle()
+	}
+	p.needCycle = !p.needCycle
 }
 
 // cycle will create a new bitPerm from Randp based on the current cycle.
@@ -100,6 +106,7 @@ func (p *Permutator) SetIndex(idx *big.Int) {
 	p.CurrentState = int(r.Int64())
 	p.Cycle.Current = p.CurrentState
 	p.cycle()
+	p.needCycle = false
 }
 
 // Index returns the current index of the cryptor.  For permeutators, this
