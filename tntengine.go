@@ -287,10 +287,12 @@ func (e *TntEngine) Init(secret []byte) {
 			rotors[rIdx] = machine
 			rIdx++
 		case *Permutator:
-			machine.Update(random)
-			e.maximalStates = e.maximalStates.Mul(e.maximalStates, big.NewInt(int64(machine.(*Permutator).MaximalStates)))
-			permutators[pIdx] = machine
-			pIdx++
+			if pIdx == 0 {
+				machine.Update(random)
+				e.maximalStates = e.maximalStates.Mul(e.maximalStates, big.NewInt(int64(machine.(*Permutator).MaximalStates)))
+				permutators[pIdx] = machine
+				pIdx++
+			}
 		case *Counter:
 			machine.SetIndex(BigZero)
 		}
@@ -359,7 +361,8 @@ func createProFormaMachine() *[]Crypter {
 	newMachine[2] = new(Permutator).New(Permutator1.Cycle.Length, append([]byte(nil), Permutator1.Randp...))
 	newMachine[3] = new(Rotor).New(Rotor3.Size, Rotor3.Start, Rotor3.Step, append([]byte(nil), Rotor3.Rotor...))
 	newMachine[4] = new(Rotor).New(Rotor4.Size, Rotor4.Start, Rotor4.Step, append([]byte(nil), Rotor4.Rotor...))
-	newMachine[5] = new(Permutator).New(Permutator1.Cycle.Length, append([]byte(nil), Permutator1.Randp...))
+	// newMachine[5] = new(Permutator).New(Permutator1.Cycle.Length, append([]byte(nil), Permutator1.Randp...))
+	newMachine[5] = newMachine[2]
 	newMachine[6] = new(Rotor).New(Rotor5.Size, Rotor5.Start, Rotor5.Step, append([]byte(nil), Rotor5.Rotor...))
 	newMachine[7] = new(Rotor).New(Rotor6.Size, Rotor6.Start, Rotor6.Step, append([]byte(nil), Rotor6.Rotor...))
 
