@@ -11,6 +11,7 @@ import (
 	"log"
 	"math/big"
 	"os"
+	"reflect"
 	"strings"
 
 	"github.com/bgallie/jc1"
@@ -261,7 +262,7 @@ func (e *TntEngine) Init(secret []byte) {
 	e.cntrKey = hex.EncodeToString(blk[:])
 	e.SetIndex(BigZero)
 	// Create a random number function [func(max int) int] that uses psudo-
-	// random data generated the proforma encryption machine.
+	// random data generated from the proforma encryption machine.
 	random := new(Rand).New(e)
 	// get the number of rotors and permutators
 	rCnt, rIdx := 0, 0
@@ -297,20 +298,26 @@ func (e *TntEngine) Init(secret []byte) {
 			machine.SetIndex(BigZero)
 		}
 	}
-	// Now that we have created the new rotors and permutators from the proform
+	// Now that we have created the new rotors and permutators from the proforma
 	// machine, populate the TntEngine with them.
 	newMachine := make([]Crypter, len(engineLayout)+1)
 	rotorOrder := random.Perm(rCnt)
 	// The original TNT program only used a single permutator twice befor cycing it.
 	// due to the cycleing a permutator after it's used, we use duplicate permutators.
-	permToUse := permutators[0]
+	// We use reflection to get the first permutator make the second permutator a
+	// duplicate of the first since the second permutator will be updated to a
+	// different value then the first permutator.
+	p := reflect.ValueOf(permutators[0]).Interface().(*Permutator)
+	permutators[1] = new(Permutator).New(p.Cycle.Length, p.Randp)
 	rIdx = 0
+	pIdx = 0
 	for idx, val := range engineLayout {
 		if val == 'r' {
 			newMachine[idx] = rotors[rotorOrder[rIdx]]
 			rIdx++
 		} else if val == 'p' {
-			newMachine[idx] = permToUse
+			newMachine[idx] = permutators[pIdx]
+			pIdx++
 		}
 	}
 	// cnt := copy(newMachine, e.engine)
@@ -361,7 +368,7 @@ func createProFormaMachine() *[]Crypter {
 	newMachine[2] = new(Permutator).New(Permutator1.Cycle.Length, append([]byte(nil), Permutator1.Randp...))
 	newMachine[3] = new(Rotor).New(Rotor3.Size, Rotor3.Start, Rotor3.Step, append([]byte(nil), Rotor3.Rotor...))
 	newMachine[4] = new(Rotor).New(Rotor4.Size, Rotor4.Start, Rotor4.Step, append([]byte(nil), Rotor4.Rotor...))
-	// newMachine[5] = new(Permutator).New(Permutator1.Cycle.Length, append([]byte(nil), Permutator1.Randp...))
+	newMachine[5] = new(Permutator).New(Permutator1.Cycle.Length, append([]byte(nil), Permutator1.Randp...))
 	newMachine[5] = newMachine[2]
 	newMachine[6] = new(Rotor).New(Rotor5.Size, Rotor5.Start, Rotor5.Step, append([]byte(nil), Rotor5.Rotor...))
 	newMachine[7] = new(Rotor).New(Rotor6.Size, Rotor6.Start, Rotor6.Step, append([]byte(nil), Rotor6.Rotor...))

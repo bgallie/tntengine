@@ -28,7 +28,7 @@ func TestNewRand(t *testing.T) {
 			name:  "NewRandTest 1",
 			args:  args{tntMachine},
 			want:  &Rand{tntMachine, CipherBlockBytes, emptyBlk},
-			wantK: "30a7c225e88daa83416dee1970dc58b81f0c3771d6eb801ce23b49439357cc16",
+			wantK: "0f10aa730d813966d2029f2a5e4474a3e0fc1a535daaa53aa96faf601de43ccd",
 		},
 	}
 	for _, tt := range tests {
@@ -63,7 +63,7 @@ func TestNew(t *testing.T) {
 			name:  "NewTest 1",
 			args:  args{tntMachine},
 			want:  &Rand{tntMachine, CipherBlockBytes, emptyBlk},
-			wantK: "30a7c225e88daa83416dee1970dc58b81f0c3771d6eb801ce23b49439357cc16",
+			wantK: "0f10aa730d813966d2029f2a5e4474a3e0fc1a535daaa53aa96faf601de43ccd",
 		},
 	}
 	for _, tt := range tests {
@@ -99,8 +99,8 @@ func TestRand_Intn(t *testing.T) {
 		{
 			name:  "Intn Test 1",
 			args:  args{1000},
-			want:  72,
-			wantK: "30a7c225e88daa83416dee1970dc58b81f0c3771d6eb801ce23b49439357cc16",
+			want:  17,
+			wantK: "0f10aa730d813966d2029f2a5e4474a3e0fc1a535daaa53aa96faf601de43ccd",
 			wantR: &Rand{tntMachine, CipherBlockBytes, emptyBlk},
 		},
 	}
@@ -140,8 +140,8 @@ func TestRand_Int63n(t *testing.T) {
 		{
 			name:  "Int63n Test 1",
 			args:  args{1000000000},
-			want:  746806460,
-			wantK: "30a7c225e88daa83416dee1970dc58b81f0c3771d6eb801ce23b49439357cc16",
+			want:  68280456,
+			wantK: "0f10aa730d813966d2029f2a5e4474a3e0fc1a535daaa53aa96faf601de43ccd",
 			wantR: &Rand{tntMachine, CipherBlockBytes, emptyBlk},
 		},
 	}
@@ -180,8 +180,8 @@ func TestRand_Perm(t *testing.T) {
 		{
 			name:  "Prem Test 1",
 			args:  args{10},
-			want:  []int{1, 9, 5, 6, 0, 3, 4, 2, 7, 8},
-			wantK: "30a7c225e88daa83416dee1970dc58b81f0c3771d6eb801ce23b49439357cc16",
+			want:  []int{5, 3, 6, 9, 2, 8, 7, 0, 1, 4},
+			wantK: "0f10aa730d813966d2029f2a5e4474a3e0fc1a535daaa53aa96faf601de43ccd",
 		},
 	}
 	for _, tt := range tests {
@@ -219,12 +219,12 @@ func TestRand_Read(t *testing.T) {
 			name: "Read test 1",
 			args: args{make([]byte, 36)},
 			want: []byte{
-				188, 72, 151, 146, 44, 131, 92, 188, 38, 224, 243, 187, 32,
-				233, 151, 36, 177, 92, 63, 149, 87, 13, 250, 163, 86, 122,
-				19, 128, 214, 56, 181, 18, 147, 167, 82, 97},
+				4, 17, 224, 136, 169, 226, 115, 214, 46, 50, 128, 101,
+				18, 250, 253, 121, 24, 138, 174, 236, 182, 245, 22, 247,
+				130, 184, 175, 152, 243, 95, 156, 246, 46, 231, 234, 99},
 			wantN:   36,
 			wantErr: false,
-			wantK:   "30a7c225e88daa83416dee1970dc58b81f0c3771d6eb801ce23b49439357cc16",
+			wantK:   "0f10aa730d813966d2029f2a5e4474a3e0fc1a535daaa53aa96faf601de43ccd",
 		},
 	}
 	for _, tt := range tests {
