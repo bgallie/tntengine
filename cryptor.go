@@ -92,7 +92,7 @@ func SubBlock(blk, key CipherBlock) CipherBlock {
 	for idx, val := range blk {
 		p = p + int(val) - int(key[idx])
 		blk[idx] = byte(p & 0xFF)
-		p = p >> BitsPerByte
+		p >>= BitsPerByte
 	}
 	return blk
 }
@@ -100,9 +100,9 @@ func SubBlock(blk, key CipherBlock) CipherBlock {
 // AddBlock - adds (not XOR) the data to be encrypted with the key.
 func AddBlock(blk, key CipherBlock) CipherBlock {
 	var p int
-	for i, v := range blk {
-		p += int(v) + int(key[i])
-		blk[i] = byte(p & 0xFF)
+	for idx, val := range blk {
+		p += int(val) + int(key[idx])
+		blk[idx] = byte(p & 0xFF)
 		p >>= BitsPerByte
 	}
 	return blk
@@ -134,6 +134,9 @@ func EncryptMachine(ecm Crypter, left chan CipherBlock) chan CipherBlock {
 // DecryptMachine - set up a rotor, permutator, or counter to decrypt a block
 // read from the left (input channel) and send it out on the right (output channel)
 func DecryptMachine(ecm Crypter, left chan CipherBlock) chan CipherBlock {
+	if ecm == nil {
+		panic("ecm is nil")
+	}
 	right := make(chan CipherBlock)
 	go func(ecm Crypter, left chan CipherBlock, right chan CipherBlock) {
 		defer close(right)

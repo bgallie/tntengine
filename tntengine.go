@@ -11,15 +11,17 @@ import (
 	"log"
 	"math/big"
 	"os"
-	"reflect"
 	"strings"
 
 	"github.com/bgallie/jc1"
 	"golang.org/x/crypto/sha3"
 )
 
+const (
+	engineLayout = "rrprrprr" // 'r' is rotor, 'p' is permutator
+)
+
 var (
-	engineLayout   = "rrprrprr" // 'r' is rotor, 'p' is permutator
 	proFormaRotors = []*Rotor{
 		// Define the proforma rotors used to create the actual rotors to use.
 		new(Rotor).New(1789, 1065, 1499, []byte{
@@ -293,6 +295,13 @@ func (e *TntEngine) Init(secret []byte) {
 				e.maximalStates = e.maximalStates.Mul(e.maximalStates, big.NewInt(int64(machine.(*Permutator).MaximalStates)))
 				permutators[pIdx] = machine
 				pIdx++
+			} else {
+				// The original TNT program only used a single permutator twice before cycing it.
+				// Due to the cycleing a permutator after it's used, we use duplicate permutators
+				// to simulate this effect.
+				p := permutators[0].(*Permutator)
+				permutators[pIdx] = new(Permutator).New(p.Cycle.Length, append([]byte(nil), p.Randp...))
+				pIdx++
 			}
 		case *Counter:
 			machine.SetIndex(BigZero)
@@ -302,13 +311,6 @@ func (e *TntEngine) Init(secret []byte) {
 	// machine, populate the TntEngine with them.
 	newMachine := make([]Crypter, len(engineLayout)+1)
 	rotorOrder := random.Perm(rCnt)
-	// The original TNT program only used a single permutator twice befor cycing it.
-	// due to the cycleing a permutator after it's used, we use duplicate permutators.
-	// We use reflection to get the first permutator make the second permutator a
-	// duplicate of the first since the second permutator will be updated to a
-	// different value then the first permutator.
-	p := reflect.ValueOf(permutators[0]).Interface().(*Permutator)
-	permutators[1] = new(Permutator).New(p.Cycle.Length, p.Randp)
 	rIdx = 0
 	pIdx = 0
 	for idx, val := range engineLayout {
@@ -369,7 +371,6 @@ func createProFormaMachine() *[]Crypter {
 	newMachine[3] = new(Rotor).New(Rotor3.Size, Rotor3.Start, Rotor3.Step, append([]byte(nil), Rotor3.Rotor...))
 	newMachine[4] = new(Rotor).New(Rotor4.Size, Rotor4.Start, Rotor4.Step, append([]byte(nil), Rotor4.Rotor...))
 	newMachine[5] = new(Permutator).New(Permutator1.Cycle.Length, append([]byte(nil), Permutator1.Randp...))
-	newMachine[5] = newMachine[2]
 	newMachine[6] = new(Rotor).New(Rotor5.Size, Rotor5.Start, Rotor5.Step, append([]byte(nil), Rotor5.Rotor...))
 	newMachine[7] = new(Rotor).New(Rotor6.Size, Rotor6.Start, Rotor6.Step, append([]byte(nil), Rotor6.Rotor...))
 
