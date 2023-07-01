@@ -155,10 +155,9 @@ func DecryptMachine(ecm Crypter, left chan CipherBlock) chan CipherBlock {
 }
 
 // CreateEncryptMachine - Chain the encryption machines together, using channels to pass
-//
-//	the data to be encrypted to the individual encryption machines.
-//	The data is entered in the 'left' channel and the encrypted data
-//	is read from the 'right' channel.
+// the data to be encrypted to the individual encryption machines.
+// The data is entered in the 'left' channel and the encrypted data is read from the
+// 'right' channel.
 func createEncryptMachine(ecms ...Crypter) (left chan CipherBlock, right chan CipherBlock) {
 	if ecms != nil {
 		idx := 0
@@ -174,10 +173,9 @@ func createEncryptMachine(ecms ...Crypter) (left chan CipherBlock, right chan Ci
 }
 
 // CreateDecryptMachine - Chain the decryption machines together (in reverse order), using
-//
-//	channels to pass the data to be decrypted to the individual
-//	decryption machines.  The encrypted data is entered in the 'left'
-//	channel and the plaintext data is read from the 'right' channel.
+// channels to pass the data to be decrypted to the individual decryption machines.
+// The encrypted data is entered in the 'left' channel and the plaintext data is read from
+// the 'right' channel.
 func createDecryptMachine(ecms ...Crypter) (left chan CipherBlock, right chan CipherBlock) {
 	if ecms != nil {
 		idx := len(ecms) - 1
