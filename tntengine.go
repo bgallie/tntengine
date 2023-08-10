@@ -147,15 +147,8 @@ var (
 			225, 126, 54, 36, 220, 208, 150, 117, 255, 221, 101, 69, 77, 110, 243, 206,
 			130, 59, 205, 242, 184, 164, 131, 12, 2, 119, 96, 171, 53, 68, 8, 145}),
 	}
-	Rotor1               = proFormaRotors[0]
-	Rotor2               = proFormaRotors[1]
-	Rotor3               = proFormaRotors[2]
-	Rotor4               = proFormaRotors[3]
-	Rotor5               = proFormaRotors[4]
-	Rotor6               = proFormaRotors[5]
-	Permutator1          = proFormPermutators[0]
-	counter     *Counter = new(Counter)
-	jc1Key      *jc1.UberJc1
+	counter *Counter = new(Counter)
+	jc1Key  *jc1.UberJc1
 )
 
 // TntEngine type defines the encryption/decryption machine (rotors and
@@ -365,14 +358,14 @@ func createProFormaMachine() *[]Crypter {
 	// Create the ProFormaMachine by making a copy of the hardcoded proforma rotors and permutators.
 	// This resolves an issue running tests where TntEngine.Init() is called multiple times which
 	// caused a failure on the second call.
-	newMachine[0] = new(Rotor).New(Rotor1.Size, Rotor1.Start, Rotor1.Step, append([]byte(nil), Rotor1.Rotor...))
-	newMachine[1] = new(Rotor).New(Rotor2.Size, Rotor2.Start, Rotor2.Step, append([]byte(nil), Rotor2.Rotor...))
-	newMachine[2] = new(Permutator).New(Permutator1.Cycle.Length, append([]byte(nil), Permutator1.Randp...))
-	newMachine[3] = new(Rotor).New(Rotor3.Size, Rotor3.Start, Rotor3.Step, append([]byte(nil), Rotor3.Rotor...))
-	newMachine[4] = new(Rotor).New(Rotor4.Size, Rotor4.Start, Rotor4.Step, append([]byte(nil), Rotor4.Rotor...))
-	newMachine[5] = new(Permutator).New(Permutator1.Cycle.Length, append([]byte(nil), Permutator1.Randp...))
-	newMachine[6] = new(Rotor).New(Rotor5.Size, Rotor5.Start, Rotor5.Step, append([]byte(nil), Rotor5.Rotor...))
-	newMachine[7] = new(Rotor).New(Rotor6.Size, Rotor6.Start, Rotor6.Step, append([]byte(nil), Rotor6.Rotor...))
+	newMachine[0] = new(Rotor).New(proFormaRotors[0].Size, proFormaRotors[0].Start, proFormaRotors[0].Step, append([]byte(nil), proFormaRotors[0].Rotor...))
+	newMachine[1] = new(Rotor).New(proFormaRotors[1].Size, proFormaRotors[1].Start, proFormaRotors[1].Step, append([]byte(nil), proFormaRotors[1].Rotor...))
+	newMachine[2] = new(Permutator).New(proFormPermutators[0].Cycle.Length, append([]byte(nil), proFormPermutators[0].Randp...))
+	newMachine[3] = new(Rotor).New(proFormaRotors[2].Size, proFormaRotors[2].Start, proFormaRotors[2].Step, append([]byte(nil), proFormaRotors[2].Rotor...))
+	newMachine[4] = new(Rotor).New(proFormaRotors[3].Size, proFormaRotors[3].Start, proFormaRotors[3].Step, append([]byte(nil), proFormaRotors[3].Rotor...))
+	newMachine[5] = new(Permutator).New(proFormPermutators[0].Cycle.Length, append([]byte(nil), proFormPermutators[0].Randp...))
+	newMachine[6] = new(Rotor).New(proFormaRotors[4].Size, proFormaRotors[4].Start, proFormaRotors[4].Step, append([]byte(nil), proFormaRotors[4].Rotor...))
+	newMachine[7] = new(Rotor).New(proFormaRotors[5].Size, proFormaRotors[5].Start, proFormaRotors[5].Step, append([]byte(nil), proFormaRotors[5].Rotor...))
 
 	return &newMachine
 }

@@ -356,7 +356,7 @@ func Test_createProFormaMachine(t *testing.T) {
 	}{
 		{
 			name: "tcpfm1",
-			want: &[]Crypter{Rotor1, Rotor2, Permutator1, Rotor3, Rotor4, Permutator1, Rotor5, Rotor6},
+			want: &[]Crypter{proFormaRotors[0], proFormaRotors[1], proFormPermutators[0], proFormaRotors[2], proFormaRotors[3], proFormPermutators[0], proFormaRotors[4], proFormaRotors[5]},
 		},
 	}
 	for _, tt := range tests {
