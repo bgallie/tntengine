@@ -34,9 +34,12 @@ func (r *Rotor) New(size, start, step int, rotor []byte) *Rotor {
 //   - random rotor data.
 func (r *Rotor) Update(random *Rand) {
 	// Get start and step of the new rotor
-	rotorSize := r.Size
-	start := random.Intn(rotorSize)
-	step := random.Intn(rotorSize-1) + 1
+	start := random.Intn(r.Size) // 0 <= start < r.Size
+	// The step must be in the range 0 < step < r.Size.  If it happens to be equal
+	// to 0 or r.Size, then the rotor will not step (it will always be equal to start
+	// each time it steps)
+	step := random.Intn(r.Size-1) + 1 // 0 < step < r.Size
+
 	// Fill the rotor with random data using tntengine Rand function to generate the
 	// random data to fill the rotor.
 	random.Read(r.Rotor)
@@ -65,6 +68,8 @@ func (r *Rotor) SetIndex(idx *big.Int) {
 	if idx.Sign() == 0 {
 		r.Current = r.Start
 	} else {
+		// Calculate the new r.Current:
+		// r.Current = mod(((idx * r.Step) + r.Start), r.Size) + r.Start
 		p := new(big.Int)
 		q := new(big.Int)
 		rem := new(big.Int)
@@ -80,14 +85,19 @@ func (r *Rotor) Index() *big.Int {
 	return nil
 }
 
-// Get the number of bytes in "blk" from the given rotor.
+// Get the number of bits in "blk" from the given rotor.
 func (r *Rotor) getRotorBlock(blk CipherBlock) CipherBlock {
+	// This code handles short blocks to accomadate file lenghts
+	// that are not multiples of "CipherBlockBytes"
 	ress := make([]byte, len(blk))
 	rotor := r.Rotor
 	idx := r.Current
 	blockSize := len(blk) * BitsPerByte
 
 	for cnt := 0; cnt < blockSize; cnt++ {
+		// Since "ress" is initialized so that all bits are zero,
+		// we only have to set the bits in "ress" that are non-zero
+		// in the rotor.
 		if GetBit(rotor, uint(idx)) {
 			SetBit(ress, uint(cnt))
 		}
@@ -95,17 +105,20 @@ func (r *Rotor) getRotorBlock(blk CipherBlock) CipherBlock {
 		idx++
 	}
 
+	// Step the rotor to its new position.
 	r.Current = (r.Current + r.Step) % r.Size
 	return ress
 }
 
 // ApplyF - encrypts the given block of data.
 func (r *Rotor) ApplyF(blk CipherBlock) CipherBlock {
+	// Add (not XOR) the rotor bits to the bits in the input block.
 	return AddBlock(blk, r.getRotorBlock(blk))
 }
 
 // ApplyG - decrypts the given block of data
 func (r *Rotor) ApplyG(blk CipherBlock) CipherBlock {
+	// Subtract (not XOR) the rotor bits from the bits in the input block.
 	return SubBlock(blk, r.getRotorBlock(blk))
 }
 
