@@ -19,5 +19,7 @@ type Crypter interface {
 	ApplyF(CipherBlock) CipherBlock // encryption function
 	ApplyG(CipherBlock) CipherBlock // decryption function
 }
-```
+````
 There are three types, `Rotor`, `Permutator`, and `Counter` that satisfies the `Crypter` interface.  The `Rotor` and `Permutator` types provides the rotors and permutators used to encrypt/decrypt the plaintext.  `Counter`, is a type that just counts the number of 32-byte blocks that have been encrypted/decrypted.
+
+The `Rotor` and `Permutator` objects are wrapped in a go function that reads a `CypherBlock` from the input channel, calls the `Applyf` or `Applyg` function depending on whether the file is being encrypted or decrypted, and then sends processed `CiperBlock` to the output channel.  The wrapped `Rotor` and `Permutator` objects are then chained together by connecting the ouput channel of one wrapped object to the input channel of the following object.  The input of the first object in the chain is feed the data to be encrypted/decrypted and the output of the last object is the encrypted/decrypted data.
