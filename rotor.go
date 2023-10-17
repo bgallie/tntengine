@@ -39,7 +39,6 @@ func (r *Rotor) Update(random *Rand) {
 	// to 0 or r.Size, then the rotor will not step (it will always be equal to start
 	// each time it steps)
 	step := random.Intn(r.Size-1) + 1 // 0 < step < r.Size
-
 	// Fill the rotor with random data using tntengine Rand function to generate the
 	// random data to fill the rotor.
 	random.Read(r.Rotor)

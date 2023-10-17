@@ -76,7 +76,7 @@ func (p *Permutator) nextState() {
 // cycle will create a new bitPerm from Randp based on the current cycle.
 // Note that tntengine only uses a single cycle of length 256.
 func (p *Permutator) cycle() {
-	cycle := p.Randp[p.Cycle.Start : p.Cycle.Start+p.Cycle.Length]
+	cycle := p.Randp[:] // there is only 1 cycle so use all of p.Randp
 	sIdx := p.Cycle.Current
 	length := p.Cycle.Length
 	for _, val := range cycle {
@@ -104,8 +104,8 @@ func (p *Permutator) Index() *big.Int {
 
 // ApplyF performs forward permutation on the 32 byte block of data.
 // Note: if the length of the incoming block is less than CipherBlockBytes
-//
-//	in length, then the permutation is not applied (to the last block).
+// in length, then the permutation is not applied.  This allows files whose
+// length is not a multiple of 32 bytes to be correctly enrypted/decrypted.
 func (p *Permutator) ApplyF(blk CipherBlock) CipherBlock {
 	if len(blk) == CipherBlockBytes {
 		ress := make([]byte, CipherBlockBytes)
@@ -122,8 +122,8 @@ func (p *Permutator) ApplyF(blk CipherBlock) CipherBlock {
 
 // ApplyG performs the reverse permutation on the 32 byte block of data.
 // Note: if the length of the incoming block is less than CipherBlockBytes
-//
-//	in length, then the permutation is not applied (to the last block).
+// in length, then the permutation is not applied.  This allows files whose
+// length is not a multiple of 32 bytes to be correctly enrypted/decrypted.
 func (p *Permutator) ApplyG(blk CipherBlock) CipherBlock {
 	if len(blk) == CipherBlockBytes {
 		ress := make([]byte, CipherBlockBytes)

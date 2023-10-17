@@ -127,7 +127,7 @@ var (
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}),
 	}
-	// Define the proforma permutators used to create the actual permutators to use.
+	// Define the proforma permutator used to create the actual permutator to use.
 	proFormPermutators = []*Permutator{
 		new(Permutator).New(256, []byte{
 			248, 250, 32, 91, 122, 166, 115, 61, 178, 111, 37, 35, 82, 167, 157, 66,
@@ -172,7 +172,8 @@ func (e *TntEngine) Right() chan CipherBlock {
 }
 
 // CounterKey is a getter that returns the SHAKE256 hash for the secret key.
-// This is used to set/retrieve that next block to use in encrypting data.
+// This is used to set/retrieve that next block to use in encrypting data
+// from the file used to save the next block to use..
 func (e *TntEngine) CounterKey() string {
 	return e.cntrKey
 }
@@ -193,7 +194,7 @@ func (e *TntEngine) Index() (cntr *big.Int) {
 	return
 }
 
-// SetIndex is a setter function that sets the rotors and permutators so the
+// SetIndex is a setter function that sets the rotors and permutators so that
 // the TntEngine will be ready start encrypting/decrypting at the correct block.
 func (e *TntEngine) SetIndex(iCnt *big.Int) {
 	for _, machine := range e.engine {
@@ -256,10 +257,10 @@ func (e *TntEngine) Init(secret []byte) {
 	blk = <-e.right
 	e.cntrKey = hex.EncodeToString(blk[:])
 	e.SetIndex(BigZero)
-	// Create a random number function [func(max int) int] that uses psudo-
-	// random data generated from the proforma encryption machine.
+	// Create a psudo-random number generator that uses psudo-random data
+	// generated from the proforma encryption machine.
 	random := new(Rand).New(e)
-	// get the number of rotors and permutators
+	// get the number of rotors and permutators defined by the string, engineLayout
 	rCnt, rIdx := 0, 0
 	pIdx, pCnt := 0, 0
 	for _, v := range engineLayout {
@@ -301,7 +302,9 @@ func (e *TntEngine) Init(secret []byte) {
 		}
 	}
 	// Now that we have created the new rotors and permutators from the proforma
-	// machine, populate the TntEngine with them.
+	// machine, populate the TntEngine with them.  The order of the rotors are
+	// randomized (i.e., the order of the rotors in the new machine is not the
+	// same as in the proforma machine)
 	newMachine := make([]Crypter, len(engineLayout)+1)
 	rotorOrder := random.Perm(rCnt)
 	rIdx = 0
@@ -346,15 +349,14 @@ func (e *TntEngine) CloseCipherMachine() {
 }
 
 // createProFormaMachine initializes the proForma machine used to create the
-// TNT encryption machine.  If the machineFileName is not empty then the
-// proForma machine is loaded from that file, else the hardcoded rotors and
-// permutators are used to initialize the proForma machine.
+// TNT encryption machine.  The hardcoded rotors and permutator are used to
+// initialize the proForma machine.
 func createProFormaMachine() *[]Crypter {
 	newMachine := make([]Crypter, 8)
 	// Create the proforma encryption machine.  The layout of the machine is:
 	// 		rotor, rotor, permutator, rotor, rotor, permutator, rotor, rotor
-	// Note: The two permutators are identical which simulates the original 'C' code where the permutator
-	//		 is used twice before it is cycled to it's next state.
+	// Note: The two permutators are identical which simulates the original Z-80 assembler
+	//		 code where the permutator is used twice before it is cycled to it's next state.
 	// Create the ProFormaMachine by making a copy of the hardcoded proforma rotors and permutators.
 	// This resolves an issue running tests where TntEngine.Init() is called multiple times which
 	// caused a failure on the second call.
