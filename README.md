@@ -5,10 +5,10 @@
 
 The first change is that program is broken out into two pieces:
 
-* `tntengine`, a module that only contains the code necessary to support the rotors and permutator that encrypts/decrypts the plaintext.  This module is essentially a pseudo-random number generator with a very long period.
-* `tnt`, The code that reads the file that to be encrypted/decrypted.
+* `tntengine`, a module that only contains the code necessary to support the rotors and permutator that encrypts/decrypts the plaintext.  it contains the code to initialize the rotors and permutators based on a supplied secret key.  This module is essentially a pseudo-random number generator with a very long period.
+* `tnt`, the code that obtains the secret key, the file that to be encrypted/decrypted, the starting block number, and saves the next starting block number after the encryption is done.
 
-n the original program, the rotors and permutator (note that there is only one permutator that is used twice) are applied sequentially then the rotors are stepped and the permutator is cycled.  The next change is that the *golang* implementation makes use of *golang*'s built-in concurrency features to run the rotors and permutators concurrently, which means the rotors are applied and stepped individually along with two _**identical**_ permutators (instead of one) that are applied and cycled individually.
+In the original program, the rotors and permutator (note that there is only one permutator that is used twice) are applied sequentially then the rotors are stepped and the permutator is cycled.  The next change is that the *golang* implementation makes use of *golang*'s built-in concurrency features to run the rotors and permutators concurrently, which means the rotors are applied and stepped individually along with two _**identical**_ permutators (instead of one) that are applied and cycled individually.  This simulates the original code where one permutator is used twice before it is cycled.
 
 To support this, an interface called `Crypter` wad defined:
 ```
