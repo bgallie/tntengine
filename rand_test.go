@@ -98,8 +98,8 @@ func TestRand_Intn(t *testing.T) {
 	}{
 		{
 			name:  "Intn Test 1",
-			args:  args{1000},
-			want:  442,
+			args:  args{100000000},
+			want:  29018107,
 			wantK: "30a7c225e88daa83416dee1970dc58b81f0c3771d6eb801ce23b49439357cc16",
 			wantR: &Rand{tntMachine, CipherBlockBytes, emptyBlk},
 		},
@@ -114,6 +114,88 @@ func TestRand_Intn(t *testing.T) {
 			}
 			if got := rnd.Intn(tt.args.max); got != tt.want {
 				t.Errorf("Rand.Intn() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestRand_Int15n(t *testing.T) {
+	tntMachine := new(TntEngine)
+	tntMachine.Init([]byte("SecretKey"))
+	tntMachine.SetEngineType("E")
+	tntMachine.SetIndex(BigZero)
+	tntMachine.BuildCipherMachine()
+	defer tntMachine.CloseCipherMachine()
+	rnd := new(Rand).New(tntMachine)
+	type args struct {
+		n int16
+	}
+	tests := []struct {
+		name  string
+		args  args
+		want  int16
+		wantK string
+		wantR *Rand
+	}{
+		{
+			name:  "Int32 Test 1",
+			args:  args{10000},
+			want:  442,
+			wantK: "30a7c225e88daa83416dee1970dc58b81f0c3771d6eb801ce23b49439357cc16",
+			wantR: &Rand{tntMachine, CipherBlockBytes, emptyBlk},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tntMachine.cntrKey != tt.wantK {
+				t.Errorf("tntMachine.cntrKey = %v, want %v", tntMachine.cntrKey, tt.wantK)
+			}
+			if !reflect.DeepEqual(rnd, tt.wantR) {
+				t.Errorf("New() = %v, want %v", rnd, tt.wantR)
+			}
+			if got := rnd.Int15n(tt.args.n); got != tt.want {
+				t.Errorf("Rand.Int31n() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestRand_Int31n(t *testing.T) {
+	tntMachine := new(TntEngine)
+	tntMachine.Init([]byte("SecretKey"))
+	tntMachine.SetEngineType("E")
+	tntMachine.SetIndex(BigZero)
+	tntMachine.BuildCipherMachine()
+	defer tntMachine.CloseCipherMachine()
+	rnd := new(Rand).New(tntMachine)
+	type args struct {
+		n int32
+	}
+	tests := []struct {
+		name  string
+		args  args
+		want  int32
+		wantK string
+		wantR *Rand
+	}{
+		{
+			name:  "Int32 Test 1",
+			args:  args{1000000},
+			want:  113351,
+			wantK: "30a7c225e88daa83416dee1970dc58b81f0c3771d6eb801ce23b49439357cc16",
+			wantR: &Rand{tntMachine, CipherBlockBytes, emptyBlk},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tntMachine.cntrKey != tt.wantK {
+				t.Errorf("tntMachine.cntrKey = %v, want %v", tntMachine.cntrKey, tt.wantK)
+			}
+			if !reflect.DeepEqual(rnd, tt.wantR) {
+				t.Errorf("New() = %v, want %v", rnd, tt.wantR)
+			}
+			if got := rnd.Int31n(tt.args.n); got != tt.want {
+				t.Errorf("Rand.Int31n() = %v, want %v", got, tt.want)
 			}
 		})
 	}

@@ -11,7 +11,7 @@ import (
 	"math/big"
 )
 
-// Rotor - the type of the TNT rotor
+// Rotor is the type of a TNT rotor
 type Rotor struct {
 	Size    int    // the size in bits for this rotor
 	Start   int    // the initial starting position of the rotor
@@ -20,7 +20,7 @@ type Rotor struct {
 	Rotor   []byte // the rotor
 }
 
-// New - creates a new Rotor with the given size, start, step and rotor data.
+// New fills the (empty) rotor r with the given size, start, step and rotor data.
 func (r *Rotor) New(size, start, step int, rotor []byte) *Rotor {
 	r.Start, r.Current = start, start
 	r.Size = size
@@ -30,8 +30,7 @@ func (r *Rotor) New(size, start, step int, rotor []byte) *Rotor {
 	return r
 }
 
-// Update - updates the given Rotor with a new start, step and (psudo)
-//   - random rotor data.
+// Update rotor r with a new start, step and (psudo)-random data.
 func (r *Rotor) Update(random *Rand) {
 	// Get start and step of the new rotor
 	start := random.Intn(r.Size) // 0 <= start < r.Size
@@ -47,7 +46,7 @@ func (r *Rotor) Update(random *Rand) {
 	r.sliceRotor()
 }
 
-// sliceRotor - appends the first 256 bits of the rotor to the end of the rotor.
+// sliceRotor appends the first 256 bits of the rotor to the end of the rotor.
 func (r *Rotor) sliceRotor() {
 	var i, j uint
 	j = uint(r.Size)
@@ -61,7 +60,8 @@ func (r *Rotor) sliceRotor() {
 	}
 }
 
-// SetIndex - set the current rotor position based on the given index
+// SetIndex positions the rotor to the position it would be in after
+// processing idx number of blocks.
 func (r *Rotor) SetIndex(idx *big.Int) {
 	// Special case if idx == 0
 	if idx.Sign() == 0 {
@@ -79,12 +79,12 @@ func (r *Rotor) SetIndex(idx *big.Int) {
 	}
 }
 
-// Index - Rotor does not track the index.
+// Always return nil since the block count is not tracked for rotors.
 func (r *Rotor) Index() *big.Int {
 	return nil
 }
 
-// Get the number of bits in "blk" from the given rotor.
+// Get the number of bits in the CipherBlock from rotor r.
 func (r *Rotor) getRotorBlock(blk CipherBlock) CipherBlock {
 	// This code handles short blocks to accomadate file lenghts
 	// that are not multiples of "CipherBlockBytes"
@@ -109,19 +109,19 @@ func (r *Rotor) getRotorBlock(blk CipherBlock) CipherBlock {
 	return ress
 }
 
-// ApplyF - encrypts the given block of data.
+// ApplyF encrypts the given block of data using the rotor r.
 func (r *Rotor) ApplyF(blk CipherBlock) CipherBlock {
 	// Add (not XOR) the rotor bits to the bits in the input block.
 	return AddBlock(blk, r.getRotorBlock(blk))
 }
 
-// ApplyG - decrypts the given block of data
+// ApplyG decrypts the given block of data using the rotor r.
 func (r *Rotor) ApplyG(blk CipherBlock) CipherBlock {
 	// Subtract (not XOR) the rotor bits from the bits in the input block.
 	return SubBlock(blk, r.getRotorBlock(blk))
 }
 
-// String - converts a Rotor to a string representation of the Rotor.
+// String converts a Rotor to a string representation of the Rotor.
 func (r *Rotor) String() string {
 	var output bytes.Buffer
 	rotorLen := len(r.Rotor)
