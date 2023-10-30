@@ -99,7 +99,7 @@ func TestRand_Intn(t *testing.T) {
 		{
 			name:  "Intn Test 1",
 			args:  args{100000000},
-			want:  29018107,
+			want:  67150128,
 			wantK: "30a7c225e88daa83416dee1970dc58b81f0c3771d6eb801ce23b49439357cc16",
 			wantR: &Rand{tntMachine, CipherBlockBytes, emptyBlk},
 		},
@@ -140,7 +140,7 @@ func TestRand_Int15n(t *testing.T) {
 		{
 			name:  "Int32 Test 1",
 			args:  args{10000},
-			want:  442,
+			want:  3727,
 			wantK: "30a7c225e88daa83416dee1970dc58b81f0c3771d6eb801ce23b49439357cc16",
 			wantR: &Rand{tntMachine, CipherBlockBytes, emptyBlk},
 		},
@@ -181,7 +181,7 @@ func TestRand_Int31n(t *testing.T) {
 		{
 			name:  "Int32 Test 1",
 			args:  args{1000000},
-			want:  113351,
+			want:  988160,
 			wantK: "30a7c225e88daa83416dee1970dc58b81f0c3771d6eb801ce23b49439357cc16",
 			wantR: &Rand{tntMachine, CipherBlockBytes, emptyBlk},
 		},
@@ -222,7 +222,7 @@ func TestRand_Int63n(t *testing.T) {
 		{
 			name:  "Int63n Test 1",
 			args:  args{1000000000},
-			want:  29018107,
+			want:  793513615,
 			wantK: "30a7c225e88daa83416dee1970dc58b81f0c3771d6eb801ce23b49439357cc16",
 			wantR: &Rand{tntMachine, CipherBlockBytes, emptyBlk},
 		},
@@ -262,7 +262,7 @@ func TestRand_Perm(t *testing.T) {
 		{
 			name:  "Prem Test 1",
 			args:  args{10},
-			want:  []int{7, 8, 0, 5, 6, 4, 9, 3, 2, 1},
+			want:  []int{7, 2, 5, 9, 6, 3, 8, 1, 0, 4},
 			wantK: "30a7c225e88daa83416dee1970dc58b81f0c3771d6eb801ce23b49439357cc16",
 		},
 	}
@@ -301,9 +301,9 @@ func TestRand_Read(t *testing.T) {
 			name: "Read test 1",
 			args: args{make([]byte, 36)},
 			want: []byte{
-				1, 186, 199, 251, 33, 196, 225, 173, 88, 200, 222, 71,
-				173, 172, 53, 253, 48, 12, 142, 120, 207, 22, 70, 152,
-				79, 171, 7, 31, 35, 7, 136, 135, 216, 83, 104, 18},
+				239, 76, 14, 143, 20, 0, 161, 48, 75, 216, 12, 30,
+				103, 205, 176, 240, 35, 55, 247, 159, 136, 37, 70, 238,
+				138, 224, 211, 134, 89, 95, 212, 157, 47, 180, 245, 128},
 			wantN:   36,
 			wantErr: false,
 			wantK:   "30a7c225e88daa83416dee1970dc58b81f0c3771d6eb801ce23b49439357cc16",

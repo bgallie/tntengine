@@ -37,11 +37,17 @@ func (r *Rotor) Update(random *Rand) {
 	// The step must be in the range 0 < step < r.Size.  If it happens to be equal
 	// to 0 or r.Size, then the rotor will not step (it will always be equal to start
 	// each time it steps)
-	step := random.Intn(r.Size-1) + 1 // 0 < step < r.Size
+	r.Step = random.Intn(r.Size-1) + 1 // 0 < step < r.Size
 	// Fill the rotor with random data using tntengine Rand function to generate the
 	// random data to fill the rotor.
-	random.Read(r.Rotor)
-	r.Step = step
+	blk := make(CipherBlock, CipherBlockBytes)
+	CipherBlocksToRead := (r.Size + 7) / CipherBlockSize
+	j := 0
+	for i := 0; i < CipherBlocksToRead; i++ {
+		random.Read(blk)
+		copy(r.Rotor[j:], blk[:])
+		j += CipherBlockBytes
+	}
 	r.Start, r.Current = start, start
 	r.sliceRotor()
 }
