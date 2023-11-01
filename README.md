@@ -13,7 +13,7 @@ In the original program, the rotors and permutator (note that there is only one 
 To support this, an interface called `Crypter` wad defined:
 ```
 type Crypter interface {
-	Update(*Rand)                   // function to update the rotor/permutator
+	Update(*Rand)                   // function to update the Crypter (rotor or permutator)
 	SetIndex(*big.Int)              // setter for the index value
 	Index() *big.Int                // getter for the index value
 	ApplyF(CipherBlock) CipherBlock // encryption function
@@ -23,3 +23,21 @@ type Crypter interface {
 There are three types, `Rotor`, `Permutator`, and `Counter` that satisfies the `Crypter` interface.  The `Rotor` and `Permutator` types provides the rotors and permutators used to encrypt/decrypt the plaintext.  `Counter`, is a type that just counts the number of 32-byte blocks that have been encrypted/decrypted.
 
 The `Rotor` and `Permutator` objects are wrapped in a go function that reads a `CypherBlock` from the input channel, calls the `Applyf` or `Applyg` function depending on whether the file is being encrypted or decrypted, and then sends processed `CiperBlock` to the output channel.  The wrapped `Rotor` and `Permutator` objects are then chained together by connecting the ouput channel of one wrapped object to the input channel of the following object.  The input of the first object in the chain is feed the data to be encrypted/decrypted and the output of the last object is the encrypted/decrypted data.
+To initialize tntengine, the (hard-coded) proforma rotors and permutator are used to build the proforma machine using the sequece of rotor1, rotor2, permutator1, rotor3, rotor4, permutator1, rotor5 rotor6
+
+![Proforma Machine][def]
+
+Once the TntEngine.engine is set up with the proforma machine, an encryption machine is created by linking the rotors and permutatures togeher by wrapping them in a go function that reads a `CypherBlock` from the input channel, calls the `Applyf` function then sends processed `CiperBlock` to the output channel.  Now a random number generator is created so that we can update the rotors and permutator with new (psudo) random data in a very non-linear manner.  The rotors are updated `CipherBlockBytes` bytes at a time to add additional complexity since the rotors are being modified as they are bing used.
+
+Once the permutator and rotors have been updated, a new TntEngine.engine is created using the rotors in a random order and the rotors and permutator is used to create a new encryption machine.  In the diagram below, the random order is [R3, R5, R1, R6, R4, R2].
+
+![Encryption Machine][def2]
+
+To create a decryption machine, the rotors are taken in reveres order.
+
+![Decryption Machine][def3]
+
+[def]: images/ProformatImage.png
+[def2]: images/EncryptionMachine.png
+[def3]: images/DecryptionMachine.png
+
