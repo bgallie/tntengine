@@ -37,6 +37,8 @@ To create a decryption machine, the rotors are taken in reveres order.
 
 ![Updated Decryption Machine][def3]
 
+Once the encryuption/decryption machine is created, the data can be encrypted/decrypted by passing in the slice of 32 bytes at a time to the input channel and reading the encrypted/decrypted data as a slice of 32 bytes from the output channel.  In the original Z80 program, all the rotors and the permutator is applied to the 32 bytes of data before the next 32 bytes are processed.  In the golang version, each rotor, permutator, and counter is applied to the 32 bytes of data concurrently as it is sent from on cryptor to the next.  
+
 [def]: assets/images/proformaEncryption.png
 [def2]: assets/images/updatedEncryption.png
 [def3]: assets/images/updatedDecryption.png
