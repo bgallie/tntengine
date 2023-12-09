@@ -39,7 +39,10 @@ func (r *Rotor) Update(random *Rand) {
 	// each time it steps)
 	r.Step = random.Intn(r.Size-1) + 1 // 0 < step < r.Size
 	// Fill the rotor with random data using tntengine Rand function to generate the
-	// random data to fill the rotor.
+	// random data to fill the rotor.  As an optimization, set the random.idx equal to
+	// CypherBlockSize.  This will ensure that the random.Read() will only call the
+	// encryption function one time per block instead of up to two times per block.
+	random.idx = CipherBlockBytes
 	blk := make(CipherBlock, CipherBlockBytes)
 	CipherBlocksToRead := (r.Size + 7) / CipherBlockSize
 	j := 0
