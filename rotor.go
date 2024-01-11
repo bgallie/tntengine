@@ -99,13 +99,11 @@ func (r *Rotor) getRotorBlock(blk CipherBlock) CipherBlock {
 	// that are not multiples of "CipherBlockBytes"
 	ress := make([]byte, len(blk))
 	rotor := r.Rotor
-	// idx := r.Current
-	// blockSize := len(blk) * BitsPerByte
-	if (r.Current & 7) == 0 {
-		copy(blk, rotor[r.Current>>3:])
+	sBit := r.Current & 7
+	bIdx := r.Current >> 3
+	if sBit == 0 {
+		copy(ress, rotor[bIdx:])
 	} else {
-		sBit := r.Current & 7
-		bIdx := r.Current >> 3
 		sLeft := 8 - sBit
 		for bCnt := 0; bCnt < len(ress); bCnt++ {
 			ress[bCnt] = rotor[bIdx]>>sBit |
