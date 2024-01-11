@@ -99,20 +99,20 @@ func (r *Rotor) getRotorBlock(blk CipherBlock) CipherBlock {
 	// that are not multiples of "CipherBlockBytes"
 	ress := make([]byte, len(blk))
 	rotor := r.Rotor
-	idx := r.Current
-	blockSize := len(blk) * BitsPerByte
-
-	for cnt := 0; cnt < blockSize; cnt++ {
-		// Since "ress" is initialized so that all bits are zero,
-		// we only have to set the bits in "ress" that are non-zero
-		// in the rotor.
-		if GetBit(rotor, uint(idx)) {
-			SetBit(ress, uint(cnt))
+	// idx := r.Current
+	// blockSize := len(blk) * BitsPerByte
+	if (r.Current & 7) == 0 {
+		copy(blk, rotor[r.Current>>3:])
+	} else {
+		sBit := r.Current & 7
+		bIdx := r.Current >> 3
+		sLeft := 8 - sBit
+		for bCnt := 0; bCnt < len(ress); bCnt++ {
+			ress[bCnt] = rotor[bIdx]>>sBit |
+				(rotor[bIdx+1] << sLeft)
+			bIdx++
 		}
-
-		idx++
 	}
-
 	// Step the rotor to its new position.
 	r.Current = (r.Current + r.Step) % r.Size
 	return ress
