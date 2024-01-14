@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"fmt"
 	"math/big"
+	"os"
 )
 
 // Rotor is the type of a TNT rotor
@@ -52,20 +53,30 @@ func (r *Rotor) Update(random *Rand) {
 		j += CipherBlockBytes
 	}
 	r.Start, r.Current = start, start
-	r.sliceRotor()
+	r.sliceRotor() // Append the first 256 bits of the rotor to the end of the rotor
 }
 
 // sliceRotor appends the first 256 bits of the rotor to the end of the rotor.
 func (r *Rotor) sliceRotor() {
-	var i, j uint
-	j = uint(r.Size)
-	for i = 0; i < 256; i++ {
-		if GetBit(r.Rotor, i) {
-			SetBit(r.Rotor, j)
-		} else {
-			ClrBit(r.Rotor, j)
+	var size, sBlk, sBit, Rshift, Lshift uint
+	var i int
+	size = uint(r.Size)
+	sBlk = size >> 3
+	sBit = size & 7
+	Rshift = 8 - sBit
+	Lshift = sBit
+	fmt.Fprintf(os.Stderr, "size: %d sBlk: %d sBit: %d Rshift: %d\n", size, sBlk, sBit, Rshift)
+	if sBit == 0 {
+		copy(r.Rotor[sBlk:], r.Rotor[0:CipherBlockBytes])
+	} else {
+		// The copy appending will be done at the byte level instead of the bit level
+		// so that we only loop 32 times instead of 256 times.
+		for i = 0; i < CipherBlockBytes; i++ {
+			r.Rotor[sBlk] &= (0xff >> Rshift)       // Clear out the bits that will be replaced
+			r.Rotor[sBlk] |= (r.Rotor[i] << Lshift) // and add in the bits from the beginning of the rotor
+			sBlk++
+			r.Rotor[sBlk] = (r.Rotor[i] >> Rshift) // Seed the next byte at the end with the remaining bits from the beginning byte.
 		}
-		j++
 	}
 }
 
@@ -101,6 +112,8 @@ func (r *Rotor) getRotorBlock(blk CipherBlock) CipherBlock {
 	rotor := r.Rotor
 	sBit := r.Current & 7
 	bIdx := r.Current >> 3
+	// The copy operates at the byte level instead of the bit level
+	// so we only loop 32 times instead of 256 times.
 	if sBit == 0 {
 		copy(ress, rotor[bIdx:])
 	} else {
