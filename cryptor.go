@@ -24,9 +24,9 @@ var (
 	BigOne = big.NewInt(1)
 )
 
-// // CipherBlock is the data processed by the crypters (rotors and permutators).
-// // It consistes of the length in bytes to process and the (32 bytes of) data to
-// // process.
+// CipherBlock is the data processed by the crypters (rotors and permutators).
+// It consistes of the length in bytes to process and the (32 bytes of) data to
+// process.
 type CipherBlock []byte
 
 // String formats a string representing the CipherBlock.
