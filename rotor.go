@@ -114,15 +114,15 @@ func (r *Rotor) getRotorBlock(blk CipherBlock) CipherBlock {
 	bIdx := r.Current >> 3
 	// The copy operates at the byte level instead of the bit level
 	// so we only loop 32 times instead of 256 times.
-	if sBit == 0 {
-		copy(ress, rotor[bIdx:])
-	} else {
+	if sBit != 0 {
 		sLeft := 8 - sBit
 		for bCnt := 0; bCnt < len(ress); bCnt++ {
 			ress[bCnt] = rotor[bIdx]>>sBit |
 				(rotor[bIdx+1] << sLeft)
 			bIdx++
 		}
+	} else {
+		copy(ress, rotor[bIdx:])
 	}
 	// Step the rotor to its new position.
 	r.Current = (r.Current + r.Step) % r.Size
