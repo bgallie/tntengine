@@ -66,9 +66,7 @@ func (r *Rotor) sliceRotor() {
 	Rshift = 8 - sBit
 	Lshift = sBit
 	fmt.Fprintf(os.Stderr, "size: %d sBlk: %d sBit: %d Rshift: %d\n", size, sBlk, sBit, Rshift)
-	if sBit == 0 {
-		copy(r.Rotor[sBlk:], r.Rotor[0:CipherBlockBytes])
-	} else {
+	if sBit != 0 {
 		// The copy appending will be done at the byte level instead of the bit level
 		// so that we only loop 32 times instead of 256 times.
 		for i = 0; i < CipherBlockBytes; i++ {
@@ -77,6 +75,8 @@ func (r *Rotor) sliceRotor() {
 			sBlk++
 			r.Rotor[sBlk] = (r.Rotor[i] >> Rshift) // Seed the next byte at the end with the remaining bits from the beginning byte.
 		}
+	} else {
+		copy(r.Rotor[sBlk:], r.Rotor[0:CipherBlockBytes])
 	}
 }
 
