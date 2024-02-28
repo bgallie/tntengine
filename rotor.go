@@ -8,7 +8,6 @@ package tntengine
 import (
 	"bytes"
 	"fmt"
-	"math/big"
 	"os"
 )
 
@@ -82,25 +81,24 @@ func (r *Rotor) sliceRotor() {
 
 // SetIndex positions the rotor to the position it would be in after
 // processing idx number of blocks.
-func (r *Rotor) SetIndex(idx *big.Int) {
+func (r *Rotor) SetIndex(idx *Counter) {
 	// Special case if idx == 0
-	if idx.Sign() == 0 {
+	if idx.IsZero() {
 		r.Current = r.Start
 	} else {
 		// Calculate the new r.Current:
-		// r.Current = mod(((idx * r.Step) + r.Start), r.Size) + r.Start
-		p := new(big.Int)
-		q := new(big.Int)
-		rem := new(big.Int)
-		p = p.Mul(idx, new(big.Int).SetInt64(int64(r.Step)))
-		p = p.Add(p, new(big.Int).SetInt64(int64(r.Start)))
-		_, rem = q.DivMod(p, new(big.Int).SetInt64(int64(r.Size)), rem)
-		r.Current = int(rem.Int64())
+		// r.Current = mod(((idx * r.Step) + r.Start), r.Size)
+		p := new(Counter)
+		p.SetIndex(idx)
+		p.Mul(uint64(r.Step))
+		p.Add(uint64(r.Start))
+		rem := p.Mod(uint64(r.Size))
+		r.Current = int(rem)
 	}
 }
 
 // Always return nil since the block count is not tracked for rotors.
-func (r *Rotor) Index() *big.Int {
+func (r *Rotor) Index() *Counter {
 	return nil
 }
 

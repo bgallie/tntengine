@@ -7,7 +7,6 @@ package tntengine
 import (
 	"bytes"
 	"fmt"
-	"math/big"
 )
 
 const (
@@ -87,18 +86,15 @@ func (p *Permutator) cycle() {
 
 // SetIndex - set the Permutator to the state it would be in after encoding 'idx - 1' blocks
 // of data.
-func (p *Permutator) SetIndex(idx *big.Int) {
-	q := new(big.Int)
-	r := new(big.Int)
-	_, r = q.DivMod(idx, big.NewInt(int64(p.MaximalStates)), r)
-	p.CurrentState = int(r.Int64())
+func (p *Permutator) SetIndex(idx *Counter) {
+	p.CurrentState = int(idx.Mod(uint64(p.MaximalStates)))
 	p.Cycle.Current = p.CurrentState
 	p.cycle()
 }
 
 // Index returns the current index of the cryptor.  For permeutators, this
 // returns nil.
-func (p *Permutator) Index() *big.Int {
+func (p *Permutator) Index() *Counter {
 	return nil
 }
 

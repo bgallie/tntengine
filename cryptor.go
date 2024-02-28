@@ -7,8 +7,13 @@ package tntengine
 import (
 	"bytes"
 	"fmt"
-	"math/big"
+	"math/bits"
 )
+
+// CipherBlock is the data processed by the crypters (rotors and permutators).
+// It consistes of the length in bytes to process and the (32 bytes of) data to
+// process.
+type CipherBlock []byte
 
 // Define constants needed for tntengine
 const (
@@ -19,15 +24,10 @@ const (
 
 var (
 	// BigZero - the big int value for zero.
-	BigZero = big.NewInt(0)
+	BigZero *Counter = &Counter{0, 0}
 	// BigOne - the big int value for one.
-	BigOne = big.NewInt(1)
+	BigOne *Counter = &Counter{0, 1}
 )
-
-// CipherBlock is the data processed by the crypters (rotors and permutators).
-// It consistes of the length in bytes to process and the (32 bytes of) data to
-// process.
-type CipherBlock []byte
 
 // String formats a string representing the CipherBlock.
 func (cblk CipherBlock) String() string {
@@ -45,45 +45,190 @@ func (cblk CipherBlock) String() string {
 // Crypter interface
 type Crypter interface {
 	Update(*Rand)                   // function to update the rotor/permutator
-	SetIndex(*big.Int)              // setter for the index value
-	Index() *big.Int                // getter for the index value
+	SetIndex(*Counter)              // setter for the index value
+	Index() *Counter                // getter for the index value
 	ApplyF(CipherBlock) CipherBlock // encryption function
 	ApplyG(CipherBlock) CipherBlock // decryption function
 }
 
-// Counter is a crypter that does not encrypt/decrypt any data but counts the
-// number of blocks that were encrypted.
-type Counter struct {
-	index *big.Int
+// Counter is the type used to hold the counter of blocks processed the
+// the encryption engine.  The Counter is large enough to hold the maximum
+// number of blocks that can be encrypted before the pattern repeats
+type Counter [2]uint64
+
+// Set initializes the Counter to the given value.
+func (index *Counter) SetIndex(val *Counter) {
+	*index = *val
 }
 
+// SetString - sets the Counter to the numeric value of the (base10) string of digits.
+// SetString will panic if the string contains non-digit characters.
+func (index *Counter) SetString(val string) (*Counter, bool) {
+	var good bool = true
+	index.SetIndex(BigZero)
+	var carry uint64
+	for _, chr := range val {
+		if chr < 48 || chr > 57 {
+			good = false
+			return index, good
+		}
+		index.Mul(10)
+		j := len(index) - 1
+		index[j], carry = bits.Add64(index[j], (uint64(chr) - 48), 0)
+		for i := j - 1; i >= 0 && carry > 0; i-- {
+			index[i], carry = bits.Add64(index[i], 0, carry)
+		}
+	}
+	if carry != 0 {
+		panic("Counter overflow in Counter.SetSTring()")
+	}
+	return index, good
+}
+
+// Index - retrieves the current index value
+func (cntr *Counter) Index() *Counter {
+	return cntr
+}
+
+// Update is a no-op for Counters
 func (cntr *Counter) Update(random *Rand) {
 	// Do nothing.
 }
 
-// SetIndex - sets the initial index value
-func (cntr *Counter) SetIndex(index *big.Int) {
-	cntr.index = new(big.Int).Set(index)
+// Index - increment the counter.
+func (cntr *Counter) Increment() {
+	var carry uint64 = 0
+	i := len(cntr) - 1
+	cntr[i], carry = bits.Add64(cntr[i], 1, carry)
+	for i--; i >= 0; i-- {
+		cntr[i], carry = bits.Add64(cntr[i], 0, carry)
+	}
+	if carry != 0 {
+		panic("Counter overflow in Counter.Increment()")
+	}
 }
 
-// Index - retrieves the current index value
-func (cntr *Counter) Index() *big.Int {
-	return cntr.index
+// Add - add n to the Counter.  Add() will panic if the Counter overflows
+func (cntr *Counter) Add(n uint64) *Counter {
+	var carry uint64 = 0
+	i := len(cntr) - 1
+	cntr[i], carry = bits.Add64(cntr[i], n, 0)
+	for i--; i >= 0; i-- {
+		cntr[i], carry = bits.Add64(cntr[i], 0, carry)
+	}
+	if carry != 0 {
+		panic("Counter overflow in Counter.Add()")
+	}
+	return cntr
+}
+
+// Mul - Multiplies Counter by n.  It will panic if the
+// results overflows cntr.index
+func (multiplicand *Counter) Mul(multiplier uint64) *Counter {
+	var carry uint64 = 0
+	for i := len(multiplicand) - 1; i >= 0; i-- {
+		var cary uint64
+		if multiplicand[i] == 0 {
+			cary = 0
+		} else {
+			cary, multiplicand[i] = bits.Mul64(multiplicand[i], multiplier)
+		}
+		for j := i; j >= 0 && carry != 0; j-- {
+			multiplicand[j], carry = bits.Add64(multiplicand[j], carry, 0)
+		}
+		carry = cary
+	}
+	if carry != 0 {
+		panic("Counter overflow in Counter.Mul()")
+	}
+	return multiplicand
+}
+
+// Mod - calculate mod(counter, n)
+func (dividend Counter) Mod(divisor uint64) uint64 {
+	var r uint64 = 0
+	var i = 0
+	for ; i < len(dividend); i++ {
+		if dividend[i] != 0 {
+			break
+		}
+	}
+	for ; i < len(dividend); i++ {
+		_, r = bits.Div64(r, dividend[i], divisor)
+	}
+	return r
+}
+
+// String - convert the Counter to a base10 string representing it's numeric value.
+func (index Counter) String() string {
+	var buf = make([]byte, 154)
+	bIdx := len(buf) - 1
+	if !index.IsZero() {
+		var dividend Counter
+		dividend.SetIndex(&index)
+		r := uint64(0)
+		for !dividend.IsZero() {
+			_, r = dividend.DivMod(10)
+			buf[bIdx] = byte(r + 48)
+			bIdx--
+		}
+		return fmt.Sprint(string(buf[bIdx+1:]))
+	}
+
+	return "0"
+}
+
+func (dividend *Counter) DivMod(divisor uint64) (*Counter, uint64) {
+	var r uint64 = 0
+	var i = 0
+	// Skip zeroos in the dividend
+	for ; i < len(dividend); i++ {
+		if dividend[i] != 0 {
+			break
+		}
+	}
+	// divide the remaining parts of the divivend
+	for ; i < len(dividend); i++ {
+		dividend[i], r = bits.Div64(r, dividend[i], divisor)
+	}
+	return dividend, r
+}
+
+func (dividend *Counter) Div(divisor uint64) *Counter {
+	var r uint64 = 0
+	var i = 0
+	// Skip zeroos in the dividend
+	for ; i < len(dividend); i++ {
+		if dividend[i] != 0 {
+			break
+		}
+	}
+	// divide the remaining parts of the divivend
+	for ; i < len(dividend); i++ {
+		dividend[i], r = bits.Div64(r, dividend[i], divisor)
+	}
+	return dividend
+}
+
+// Check to see if the Counter is zero
+func (index *Counter) IsZero() bool {
+	for _, val := range index {
+		if val != 0 {
+			return false
+		}
+	}
+	return true
 }
 
 // ApplyF - increments the counter for each block that is encrypted.
 func (cntr *Counter) ApplyF(blk CipherBlock) CipherBlock {
-	cntr.index.Add(cntr.index, BigOne)
+	cntr.Increment()
 	return blk
 }
 
 // ApplyG - this function does nothing for a Counter during decryption.
 func (cntr *Counter) ApplyG(blk CipherBlock) CipherBlock {
 	return blk
-}
-
-func (cntr *Counter) String() string {
-	return fmt.Sprint(cntr.index)
 }
 
 // SubBlock -  subtracts (not XOR) the key from the data to be decrypted

@@ -4,7 +4,6 @@
 package tntengine
 
 import (
-	"math/big"
 	"reflect"
 	"testing"
 )
@@ -138,8 +137,9 @@ func TestRotor_Update(t *testing.T) {
 
 func TestRotor_SetIndex(t *testing.T) {
 	type args struct {
-		idx *big.Int
+		idx *Counter
 	}
+	idx, _ := new(Counter).SetString("10000")
 	tests := []struct {
 		name string
 		args args
@@ -148,7 +148,7 @@ func TestRotor_SetIndex(t *testing.T) {
 		{
 			name: "trsi1",
 			args: args{
-				idx: big.NewInt(10000),
+				idx: idx,
 			},
 			want: 1034,
 		},
@@ -167,7 +167,7 @@ func TestRotor_SetIndex(t *testing.T) {
 func TestRotor_Index(t *testing.T) {
 	tests := []struct {
 		name string
-		want *big.Int
+		want *Counter
 	}{
 		{
 			name: "trsi1",

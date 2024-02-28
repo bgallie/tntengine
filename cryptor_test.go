@@ -6,7 +6,6 @@ package tntengine
 // Define tests for cryptor.go
 
 import (
-	"math/big"
 	"reflect"
 	"testing"
 )
@@ -35,15 +34,15 @@ func TestCypherBlock_String(t *testing.T) {
 func TestCounter_SetIndex(t *testing.T) {
 	var tntMachine TntEngine
 	tntMachine.Init([]byte("SecretKey"))
-	iCnt, _ := new(big.Int).SetString("1234567890", 10)
+	iCnt, _ := new(Counter).SetString("1234567890")
 	type args struct {
-		index *big.Int
+		index *Counter
 	}
 	tests := []struct {
 		name string
 		cntr TntEngine
 		args args
-		want *big.Int
+		want *Counter
 	}{
 		{
 			name: "tcsi1",
@@ -69,12 +68,12 @@ func TestCounter_SetIndex(t *testing.T) {
 func TestCounter_Index(t *testing.T) {
 	var tntMachine TntEngine
 	tntMachine.Init([]byte("SecretKey"))
-	iCnt, _ := new(big.Int).SetString("1234567890", 10)
+	iCnt, _ := new(Counter).SetString("1234567890")
 	tntMachine.SetIndex(iCnt)
 	tests := []struct {
 		name string
 		cntr TntEngine
-		want *big.Int
+		want *Counter
 	}{
 		{
 			name: "tci1",
@@ -107,7 +106,7 @@ func TestCounter_ApplyF(t *testing.T) {
 		cntr  Crypter
 		args  args
 		want  CipherBlock
-		want2 *big.Int
+		want2 *Counter
 	}{
 		{
 			name:  "tcaf1",
@@ -145,7 +144,7 @@ func TestCounter_ApplyG(t *testing.T) {
 		cntr  Crypter
 		args  args
 		want  CipherBlock
-		want2 *big.Int
+		want2 *Counter
 	}{
 		{
 			name:  "tcaf1",

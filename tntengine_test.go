@@ -4,7 +4,6 @@
 package tntengine
 
 import (
-	"math/big"
 	"reflect"
 	"testing"
 )
@@ -89,11 +88,11 @@ func TestTntEngine_CounterKey(t *testing.T) {
 func TestTntEngine_Index(t *testing.T) {
 	var tntMachine TntEngine
 	tntMachine.Init([]byte("SecretKey"))
-	iCnt, _ := new(big.Int).SetString("1234567890", 10)
+	iCnt, _ := new(Counter).SetString("1234567890")
 	tntMachine.SetIndex(iCnt)
 	tests := []struct {
 		name     string
-		wantCntr *big.Int
+		wantCntr *Counter
 	}{
 		{
 			name:     "ttei1",
@@ -113,14 +112,14 @@ func TestTntEngine_Index(t *testing.T) {
 func TestTntEngine_SetIndex(t *testing.T) {
 	var tntMachine TntEngine
 	tntMachine.Init([]byte("SecretKey"))
-	iCnt, _ := new(big.Int).SetString("1234567890", 10)
+	iCnt, _ := new(Counter).SetString("1234567890")
 	type args struct {
-		iCnt *big.Int
+		iCnt *Counter
 	}
 	tests := []struct {
 		name string
 		args args
-		want *big.Int
+		want *Counter
 	}{
 		{
 			name: "ttesi1",
@@ -329,10 +328,10 @@ func TestTntEngine_Engine(t *testing.T) {
 func TestTntEngine_MaximalStates(t *testing.T) {
 	var tntMachine TntEngine
 	tntMachine.Init([]byte("SecretKey"))
-	want, _ := new(big.Int).SetString("7995790102247196352256", 10)
+	want, _ := new(Counter).SetString("7995790102247196352256")
 	tests := []struct {
 		name string
-		want *big.Int
+		want *Counter
 	}{
 		{
 			name: "tteset1",

@@ -9,7 +9,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
-	"math/big"
 	"os"
 	"strings"
 
@@ -158,7 +157,7 @@ type TntEngine struct {
 	engine        []Crypter
 	left, right   chan CipherBlock
 	cntrKey       string
-	maximalStates *big.Int
+	maximalStates *Counter
 }
 
 // Left is a getter that returns the input channel for the TntEngine.
@@ -180,7 +179,7 @@ func (e *TntEngine) CounterKey() string {
 
 // Index is a getter that returns the block number of the next block to be
 // encrypted.
-func (e *TntEngine) Index() (cntr *big.Int) {
+func (e *TntEngine) Index() (cntr *Counter) {
 	if len(e.engine) != 0 {
 		machine := e.engine[len(e.engine)-1]
 		switch machine.(type) {
@@ -196,9 +195,9 @@ func (e *TntEngine) Index() (cntr *big.Int) {
 
 // SetIndex is a setter function that sets the rotors and permutators so that
 // the TntEngine will be ready start encrypting/decrypting at the correct block.
-func (e *TntEngine) SetIndex(iCnt *big.Int) {
+func (e *TntEngine) SetIndex(iCnt *Counter) {
 	for _, machine := range e.engine {
-		machine.SetIndex(new(big.Int).Set(iCnt))
+		machine.SetIndex(iCnt)
 	}
 }
 
@@ -228,7 +227,7 @@ func (e *TntEngine) EngineType() string {
 
 // MaximalStates is a getter function that returns maximum number of states that the
 // engine can be in before repeating.
-func (e *TntEngine) MaximalStates() *big.Int {
+func (e *TntEngine) MaximalStates() *Counter {
 	return e.maximalStates
 }
 
@@ -251,7 +250,8 @@ func (e *TntEngine) Init(secret []byte) {
 	d.Read(h)
 	// Encrypt the hash starting at block 1234567890 (no good reason for this number)
 	// to make it specific to the proForma machine used.
-	iCnt, _ := new(big.Int).SetString("1234567890", 10)
+	iCnt := new(Counter)
+	iCnt.SetString("1234567890")
 	e.SetIndex(iCnt)
 	e.left <- blk
 	blk = <-e.right
@@ -273,20 +273,21 @@ func (e *TntEngine) Init(secret []byte) {
 	// Update the rotors and permutators in a very non-linear fashion.
 	rotors := make([]Crypter, rCnt)
 	permutators := make([]Crypter, pCnt)
-	e.maximalStates = new(big.Int).Set(BigOne)
+	e.maximalStates = new(Counter)
+	e.maximalStates.SetIndex(BigOne)
 	for _, machine := range e.engine {
 		switch v := machine.(type) {
 		default:
 			fmt.Fprintf(os.Stderr, "Unknown machine: %v\n", v)
 		case *Rotor:
 			machine.Update(random)
-			e.maximalStates = e.maximalStates.Mul(e.maximalStates, big.NewInt(int64(machine.(*Rotor).Size)))
+			e.maximalStates.Mul(uint64(machine.(*Rotor).Size))
 			rotors[rIdx] = machine
 			rIdx++
 		case *Permutator:
 			if pIdx == 0 {
 				machine.Update(random)
-				e.maximalStates = e.maximalStates.Mul(e.maximalStates, big.NewInt(int64(machine.(*Permutator).MaximalStates)))
+				e.maximalStates.Mul(uint64(machine.(*Permutator).MaximalStates))
 				permutators[pIdx] = machine
 				pIdx++
 			} else {

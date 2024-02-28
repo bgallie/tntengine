@@ -4,7 +4,6 @@
 package tntengine
 
 import (
-	"math/big"
 	"reflect"
 	"testing"
 )
@@ -73,7 +72,7 @@ func TestPermutator_nextState(t *testing.T) {
 
 func TestPermutator_SetIndex(t *testing.T) {
 	type args struct {
-		idx *big.Int
+		idx *Counter
 	}
 	tests := []struct {
 		name string
@@ -118,7 +117,7 @@ func TestPermutator_SetIndex(t *testing.T) {
 func TestPermutator_Index(t *testing.T) {
 	tests := []struct {
 		name string
-		want *big.Int
+		want *Counter
 	}{
 		{
 			name: "tpi1",
