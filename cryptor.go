@@ -56,6 +56,122 @@ type Crypter interface {
 // number of blocks that can be encrypted before the pattern repeats
 type Counter [2]uint64
 
+// Add - add n to the Counter.  Add() will panic if the Counter overflows
+func (cntr *Counter) Add(n uint64) *Counter {
+	var carry uint64 = 0
+	i := len(cntr) - 1
+	cntr[i], carry = bits.Add64(cntr[i], n, 0)
+	for i--; i >= 0; i-- {
+		cntr[i], carry = bits.Add64(cntr[i], 0, carry)
+	}
+	if carry != 0 {
+		panic("overflow in Counter.Add()")
+	}
+	return cntr
+}
+
+func (dividend *Counter) Div(divisor uint64) *Counter {
+	var r uint64 = 0
+	var i = 0
+	// Skip zeroos in the dividend
+	for ; i < len(dividend); i++ {
+		if dividend[i] != 0 {
+			break
+		}
+	}
+	// divide the remaining parts of the divivend
+	for ; i < len(dividend); i++ {
+		dividend[i], r = bits.Div64(r, dividend[i], divisor)
+	}
+	return dividend
+}
+
+func (dividend *Counter) DivMod(divisor uint64) (*Counter, uint64) {
+	var r uint64 = 0
+	var i = 0
+	// Skip zeroos in the dividend
+	for ; i < len(dividend); i++ {
+		if dividend[i] != 0 {
+			break
+		}
+	}
+	// divide the remaining parts of the divivend
+	for ; i < len(dividend); i++ {
+		dividend[i], r = bits.Div64(r, dividend[i], divisor)
+	}
+	return dividend, r
+}
+
+// Index - increment the counter.
+func (cntr *Counter) Increment() {
+	var carry uint64 = 0
+	i := len(cntr) - 1
+	cntr[i], carry = bits.Add64(cntr[i], 1, carry)
+	for i--; i >= 0; i-- {
+		cntr[i], carry = bits.Add64(cntr[i], 0, carry)
+	}
+	if carry != 0 {
+		panic("overflow in Counter.Increment()")
+	}
+}
+
+// Index - retrieves the current index value
+func (cntr *Counter) Index() *Counter {
+	return cntr
+}
+
+// Update is a no-op for Counters
+func (cntr *Counter) Update(random *Rand) {
+	// Do nothing.
+}
+
+// Check to see if the Counter is zero
+func (index *Counter) IsZero() bool {
+	for _, val := range index {
+		if val != 0 {
+			return false
+		}
+	}
+	return true
+}
+
+// Mod - calculate mod(counter, n)
+func (dividend Counter) Mod(divisor uint64) uint64 {
+	var r uint64 = 0
+	var i = 0
+	for ; i < len(dividend); i++ {
+		if dividend[i] != 0 {
+			break
+		}
+	}
+	for ; i < len(dividend); i++ {
+		_, r = bits.Div64(r, dividend[i], divisor)
+	}
+	return r
+}
+
+// Mul - Multiplies Counter by n.  It will panic if the
+// results overflows cntr.index
+func (multiplicand *Counter) Mul(multiplier uint64) *Counter {
+	var carry uint64 = 0
+	for i := len(multiplicand) - 1; i >= 0; i-- {
+		var cary uint64
+		if multiplicand[i] == 0 {
+			cary = 0
+		} else {
+			cary, multiplicand[i] = bits.Mul64(multiplicand[i], multiplier)
+		}
+		for j := i; j >= 0 && carry != 0; j-- {
+			multiplicand[j], carry = bits.Add64(multiplicand[j], carry, 0)
+		}
+		carry = cary
+	}
+	if carry != 0 {
+		panic("Counter overflow in Counter.Mul()")
+	}
+	return multiplicand
+}
+
 // Set initializes the Counter to the given value.
 func (index *Counter) SetIndex(val *Counter) {
 	*index = *val
@@ -85,80 +201,6 @@ func (index *Counter) SetString(val string) (*Counter, bool) {
 	return index, good
 }
 
-// Index - retrieves the current index value
-func (cntr *Counter) Index() *Counter {
-	return cntr
-}
-
-// Update is a no-op for Counters
-func (cntr *Counter) Update(random *Rand) {
-	// Do nothing.
-}
-
-// Index - increment the counter.
-func (cntr *Counter) Increment() {
-	var carry uint64 = 0
-	i := len(cntr) - 1
-	cntr[i], carry = bits.Add64(cntr[i], 1, carry)
-	for i--; i >= 0; i-- {
-		cntr[i], carry = bits.Add64(cntr[i], 0, carry)
-	}
-	if carry != 0 {
-		panic("Counter overflow in Counter.Increment()")
-	}
-}
-
-// Add - add n to the Counter.  Add() will panic if the Counter overflows
-func (cntr *Counter) Add(n uint64) *Counter {
-	var carry uint64 = 0
-	i := len(cntr) - 1
-	cntr[i], carry = bits.Add64(cntr[i], n, 0)
-	for i--; i >= 0; i-- {
-		cntr[i], carry = bits.Add64(cntr[i], 0, carry)
-	}
-	if carry != 0 {
-		panic("Counter overflow in Counter.Add()")
-	}
-	return cntr
-}
-
-// Mul - Multiplies Counter by n.  It will panic if the
-// results overflows cntr.index
-func (multiplicand *Counter) Mul(multiplier uint64) *Counter {
-	var carry uint64 = 0
-	for i := len(multiplicand) - 1; i >= 0; i-- {
-		var cary uint64
-		if multiplicand[i] == 0 {
-			cary = 0
-		} else {
-			cary, multiplicand[i] = bits.Mul64(multiplicand[i], multiplier)
-		}
-		for j := i; j >= 0 && carry != 0; j-- {
-			multiplicand[j], carry = bits.Add64(multiplicand[j], carry, 0)
-		}
-		carry = cary
-	}
-	if carry != 0 {
-		panic("Counter overflow in Counter.Mul()")
-	}
-	return multiplicand
-}
-
-// Mod - calculate mod(counter, n)
-func (dividend Counter) Mod(divisor uint64) uint64 {
-	var r uint64 = 0
-	var i = 0
-	for ; i < len(dividend); i++ {
-		if dividend[i] != 0 {
-			break
-		}
-	}
-	for ; i < len(dividend); i++ {
-		_, r = bits.Div64(r, dividend[i], divisor)
-	}
-	return r
-}
-
 // String - convert the Counter to a base10 string representing it's numeric value.
 func (index Counter) String() string {
 	var buf = make([]byte, 154)
@@ -178,46 +220,18 @@ func (index Counter) String() string {
 	return "0"
 }
 
-func (dividend *Counter) DivMod(divisor uint64) (*Counter, uint64) {
-	var r uint64 = 0
-	var i = 0
-	// Skip zeroos in the dividend
-	for ; i < len(dividend); i++ {
-		if dividend[i] != 0 {
-			break
-		}
+// Sub - subtract n from Counter.  Sub() will panic if the Counter underflows.
+func (cntr *Counter) Sub(n uint64) *Counter {
+	var borrow uint64 = 0
+	i := len(cntr) - 1
+	cntr[i], borrow = bits.Sub64(cntr[i], n, borrow)
+	for i--; i >= 0; i-- {
+		cntr[i], borrow = bits.Sub64(cntr[i], 0, borrow)
 	}
-	// divide the remaining parts of the divivend
-	for ; i < len(dividend); i++ {
-		dividend[i], r = bits.Div64(r, dividend[i], divisor)
+	if borrow != 0 {
+		panic("underflow in Counter.Sub()")
 	}
-	return dividend, r
-}
-
-func (dividend *Counter) Div(divisor uint64) *Counter {
-	var r uint64 = 0
-	var i = 0
-	// Skip zeroos in the dividend
-	for ; i < len(dividend); i++ {
-		if dividend[i] != 0 {
-			break
-		}
-	}
-	// divide the remaining parts of the divivend
-	for ; i < len(dividend); i++ {
-		dividend[i], r = bits.Div64(r, dividend[i], divisor)
-	}
-	return dividend
-}
-
-// Check to see if the Counter is zero
-func (index *Counter) IsZero() bool {
-	for _, val := range index {
-		if val != 0 {
-			return false
-		}
-	}
-	return true
+	return cntr
 }
 
 // ApplyF - increments the counter for each block that is encrypted.
