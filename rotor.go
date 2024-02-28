@@ -8,7 +8,6 @@ package tntengine
 import (
 	"bytes"
 	"fmt"
-	"os"
 )
 
 // Rotor is the type of a TNT rotor
@@ -64,7 +63,7 @@ func (r *Rotor) sliceRotor() {
 	sBit = size & 7
 	Rshift = 8 - sBit
 	Lshift = sBit
-	fmt.Fprintf(os.Stderr, "size: %d sBlk: %d sBit: %d Rshift: %d\n", size, sBlk, sBit, Rshift)
+	// fmt.Fprintf(os.Stderr, "size: %d sBlk: %d sBit: %d Rshift: %d\n", size, sBlk, sBit, Rshift)
 	if sBit != 0 {
 		// The copy appending will be done at the byte level instead of the bit level
 		// so that we only loop 32 times instead of 256 times.
