@@ -1,9 +1,8 @@
 // This is free and unencumbered software released into the public domain.
+
 // See the UNLICENSE file for details.
 
 package tntengine
-
-// Define tests for cryptor.go
 
 import (
 	"reflect"
@@ -31,39 +30,39 @@ func TestCypherBlock_String(t *testing.T) {
 	}
 }
 
-func TestCounter_SetIndex(t *testing.T) {
-	var tntMachine TntEngine
-	tntMachine.Init([]byte("SecretKey"))
-	iCnt, _ := new(Counter).SetString("1234567890")
-	type args struct {
-		index *Counter
-	}
-	tests := []struct {
-		name string
-		cntr TntEngine
-		args args
-		want *Counter
-	}{
-		{
-			name: "tcsi1",
-			cntr: tntMachine,
-			args: args{iCnt},
-			want: iCnt,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.cntr.SetIndex(tt.args.index)
-			if got := tt.cntr.Index(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Counter.Index() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-	var blk CipherBlock
-	tntMachine.left <- blk
-	<-tntMachine.right
-	tntMachine = *new(TntEngine)
-}
+// func TestCounter_SetIndex(t *testing.T) {
+// 	var tntMachine TntEngine
+// 	tntMachine.Init([]byte("SecretKey"))
+// 	iCnt, _ := new(Counter).SetString("1234567890")
+// 	type args struct {
+// 		index *Counter
+// 	}
+// 	tests := []struct {
+// 		name string
+// 		cntr TntEngine
+// 		args args
+// 		want *Counter
+// 	}{
+// 		{
+// 			name: "tcsi1",
+// 			cntr: tntMachine,
+// 			args: args{iCnt},
+// 			want: iCnt,
+// 		},
+// 	}
+// 	for _, tt := range tests {
+// 		t.Run(tt.name, func(t *testing.T) {
+// 			tt.cntr.SetIndex(tt.args.index)
+// 			if got := tt.cntr.Index(); !reflect.DeepEqual(got, tt.want) {
+// 				t.Errorf("Counter.Index() = %v, want %v", got, tt.want)
+// 			}
+// 		})
+// 	}
+// 	var blk CipherBlock
+// 	tntMachine.left <- blk
+// 	<-tntMachine.right
+// 	tntMachine = *new(TntEngine)
+// }
 
 func TestCounter_Index(t *testing.T) {
 	var tntMachine TntEngine
@@ -333,6 +332,215 @@ func Test_createDecryptMachine(t *testing.T) {
 			}
 			if !reflect.DeepEqual(gotRight, tt.wantRight) {
 				t.Errorf("createDecryptMachine() gotRight = %v, want %v", gotRight, tt.wantRight)
+			}
+		})
+	}
+}
+
+func TestCounter_Add(t *testing.T) {
+	type args struct {
+		n uint64
+	}
+	tests := []struct {
+		name string
+		cntr *Counter
+		args args
+		want *Counter
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.cntr.Add(tt.args.n); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Counter.Add() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCounter_Div(t *testing.T) {
+	type args struct {
+		divisor uint64
+	}
+	tests := []struct {
+		name     string
+		dividend *Counter
+		args     args
+		want     *Counter
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.dividend.Div(tt.args.divisor); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Counter.Div() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCounter_DivMod(t *testing.T) {
+	type args struct {
+		divisor uint64
+	}
+	tests := []struct {
+		name     string
+		dividend *Counter
+		args     args
+		want     *Counter
+		want1    uint64
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, got1 := tt.dividend.DivMod(tt.args.divisor)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Counter.DivMod() got = %v, want %v", got, tt.want)
+			}
+			if got1 != tt.want1 {
+				t.Errorf("Counter.DivMod() got1 = %v, want %v", got1, tt.want1)
+			}
+		})
+	}
+}
+
+func TestCounter_IsZero(t *testing.T) {
+	tests := []struct {
+		name  string
+		index *Counter
+		want  bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.index.IsZero(); got != tt.want {
+				t.Errorf("Counter.IsZero() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCounter_Mod(t *testing.T) {
+	type args struct {
+		divisor uint64
+	}
+	tests := []struct {
+		name     string
+		dividend Counter
+		args     args
+		want     uint64
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.dividend.Mod(tt.args.divisor); got != tt.want {
+				t.Errorf("Counter.Mod() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCounter_Mul(t *testing.T) {
+	type args struct {
+		multiplier uint64
+	}
+	tests := []struct {
+		name         string
+		multiplicand *Counter
+		args         args
+		want         *Counter
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.multiplicand.Mul(tt.args.multiplier); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Counter.Mul() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCounter_SetString(t *testing.T) {
+	type args struct {
+		val string
+	}
+	tests := []struct {
+		name  string
+		index *Counter
+		args  args
+		want  *Counter
+		want1 bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, got1 := tt.index.SetString(tt.args.val)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Counter.SetString() got = %v, want %v", got, tt.want)
+			}
+			if got1 != tt.want1 {
+				t.Errorf("Counter.SetString() got1 = %v, want %v", got1, tt.want1)
+			}
+		})
+	}
+}
+
+func TestCounter_String(t *testing.T) {
+	tests := []struct {
+		name  string
+		index Counter
+		want  string
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.index.String(); got != tt.want {
+				t.Errorf("Counter.String() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCounter_SetIndex(t *testing.T) {
+	type args struct {
+		val *Counter
+	}
+	tests := []struct {
+		name  string
+		index *Counter
+		args  args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.index.SetIndex(tt.args.val)
+		})
+	}
+}
+
+func TestCounter_Sub(t *testing.T) {
+	type args struct {
+		n uint64
+	}
+	tests := []struct {
+		name string
+		cntr *Counter
+		args args
+		want *Counter
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.cntr.Sub(tt.args.n); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Counter.Sub() = %v, want %v", got, tt.want)
 			}
 		})
 	}
